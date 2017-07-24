@@ -21,6 +21,8 @@ bool PauseScene::init() {
     if (!Scene::init()) {
         return false;
     }
+    
+    
     Size visible = Director::getInstance()->getWinSize();
     
     Sprite* sprScreenshot = PauseScene::createScreenshotSprite();
