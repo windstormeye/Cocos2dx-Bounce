@@ -23,6 +23,10 @@ public:
     static cocos2d::Scene* createScene();
     virtual bool init();
     CREATE_FUNC(BeginScene);
+    
+    void appendCubicBezier(int startPoint, std::vector<Vec2>& verts, const Vec2& from, const Vec2& control1, const Vec2& control2, const Vec2& to, uint32_t segments);
+    Node* createRoundedRectMaskNode(Size size, float radius, float borderWidth, int cornerSegments);
+    
 };
 
 #endif /* BeginScene_hpp */

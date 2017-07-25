@@ -99,6 +99,15 @@ bool HelloWorld::init()
     // 初始化小球
     birthBall();
     
+    ballNumLabel = Label::create();
+    addChild(ballNumLabel, 100);
+    ballNumLabel->setSystemFontSize(35);
+    ballNumLabel->setTextColor(Color4B(255, 255, 255, 255));
+    string currentBallSizeString = "";
+    int2str((int)ballVec->size(), currentBallSizeString);
+    ballNumLabel->setString("x " + currentBallSizeString);
+    ballNumLabel->setPosition(visibleSize.width / 2, visibleSize.height * 0.2 - 28);
+    
     // 创建球链
     ballLink = Sprite::create("res/bababa.png");
     this->addChild(ballLink, 2000);
@@ -402,12 +411,10 @@ void HelloWorld::myupdate(float dt){
                     }
                 }
                 
-                
-                
                 if (tempballVec->size() == ballVec->size()) {
                     auto tempBall = tempballVec->at(0);
-                    for (int i = 0; i < dropTempballVec->size(); i++) {
-                        auto greenball = dropTempballVec->at(i);
+                    for (int j = 0; j < (int)dropTempballVec->size(); j++) {
+                        auto greenball = dropTempballVec->at(j);
                         // 给掉下的小球添加物理身体
                         PhysicsBody* ballBodyOne=PhysicsBody::createCircle(ball->getContentSize().width/2);
                         ballBodyOne->setDynamic(false);
@@ -423,16 +430,21 @@ void HelloWorld::myupdate(float dt){
                         ActionInterval *forward = MoveTo::create(0.15, Vec2(tempBall->getPosition().x, tempBall->getPosition().y));
                         greenball->runAction(forward);
                         
-                        auto delayTime = DelayTime::create(i * 0.15f);
-                        auto func = CallFunc::create([this, greenball]()
+                        auto delayTime = DelayTime::create(j * 0.15f);
+                        auto func = CallFunc::create([this, greenball, j]()
                                                      {
                                                          Texture2D* texture = Director::getInstance()->getTextureCache()->addImage("res/ball.png");
                                                          greenball->setTexture(texture);
+                                                         
+                                                         if (j == (int)dropTempballVec->size()) {
+                                                             
+                                                         }
                                                      });
                         auto seq = Sequence::create(delayTime, func, nullptr);
                         this->runAction(seq);
                         ballVec->pushBack(greenball);
                     }
+                    
                     birthBlock();
                     
                     currentLevelNum ++;
@@ -449,6 +461,15 @@ void HelloWorld::myupdate(float dt){
                         UserDefault::getInstance()->setStringForKey("BestLevel", bestLevelString);
                         headLayer->updateBestLevelLabelText();
                     }
+                    
+                    ballNumLabel->setPosition(Vec2(tempBall->getPosition().x, tempBall->getPosition().y - 35));
+                    ballNumLabel->setVisible(true);
+                    string currentBallSizeString = "";
+                    int2str((int)ballVec->size(), currentBallSizeString);
+                    ballNumLabel->setString("x " + currentBallSizeString);
+                    //                    if (dropTempballVec->size() != 0) {
+                    //                        showAddBallNum((int)dropTempballVec->size(), tempBall->getPosition());
+                    //                    }
                     
                     isActivity = false;
                     isBegin = false;
@@ -679,15 +700,16 @@ void HelloWorld::onTouchEnded(Touch* tTouch,Event* eEvent){
         int toX = 300 * cos(CC_DEGREES_TO_RADIANS(angle));
         int toY = 300 * sin(CC_DEGREES_TO_RADIANS(angle));
         
-        for (int i = (int)ballVec->size() - 1; i >= 0 ; i --) {
+        for (int i = 0; i < (int)ballVec->size() ; i ++) {
             auto ball = ballVec->at(i);
             // 给小球的发射时间根据i值变化
             auto delayTime = DelayTime::create(i * 0.1f);
-            auto func = CallFunc::create([this,ball, toX, toY]() {
+            auto func = CallFunc::create([this,ball, toX, toY, i]() {
                 ball->getPhysicsBody()->setDynamic(true);
                 ball->getPhysicsBody()->setVelocity(Vect(toX * 4, toY * 4));
-                
-                
+                if (i == 0) {
+                    ballNumLabel->setVisible(false);
+                }
             });
             auto seq = Sequence::create(delayTime, func, nullptr);
             this->runAction(seq);
@@ -715,3 +737,25 @@ void HelloWorld::restartGame() {
     gameScene->setCurrentLevelNum(bestLevelString);
     Director::getInstance()->replaceScene(TransitionMoveInB::create(0.4, gameScene));
 }
+
+// 显示“新增小球”动画
+//void HelloWorld::showAddBallNum(int ballNum, Vec2 vec) {
+//    auto numLabel = Label::create();
+//    numLabel->setPosition(Vec2(vec.x, vec.y));
+//    this->addChild(numLabel, 3000);
+//    string addBallString = "";
+//    int2str(ballNum, addBallString);
+//    numLabel->setString("x " + addBallString);
+//    numLabel->setTextColor(Color4B(0, 139, 0, 255));
+//
+//    ActionInterval *forward = MoveTo::create(1, Vec2(vec.x, vec.y - 50));
+//    numLabel->runAction(forward);
+//
+//    auto delayTime = DelayTime::create(1.0f);
+//    auto func = CallFunc::create([this, numLabel]() {
+//        numLabel->removeFromParent();
+//    });
+//    auto seq = Sequence::create(delayTime, func, nullptr);
+//    this->runAction(seq);
+//
+//}

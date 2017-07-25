@@ -23,11 +23,15 @@ public:
     virtual bool init();
     CREATE_FUNC(PauseScene);
     
+    Button *musicBtn;
     
     Sprite* createScreenshotSprite();
     void backBtnClick(Ref *pSender, Widget::TouchEventType type);
     void restartBtnClick(Ref *pSender, Widget::TouchEventType type);
     void homeBtnClick(Ref *pSender, Widget::TouchEventType type);
+    void musicBtnClick(Ref *pSender, Widget::TouchEventType type);
+    void appendCubicBezier(int startPoint, std::vector<Vec2>& verts, const Vec2& from, const Vec2& control1, const Vec2& control2, const Vec2& to, uint32_t segments);
+    Node* createRoundedRectMaskNode(Size size, float radius, float borderWidth, int cornerSegments);
 };
 
 

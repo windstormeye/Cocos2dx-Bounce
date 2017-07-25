@@ -29,7 +29,7 @@ bool TipsLayer::init() {
     
     tipsLabel = Label::create();
     tipsLabel->setString("下滑小球发射!");
-    tipsLabel->setSystemFontSize(38);
+    tipsLabel->setSystemFontSize(30);
     tipsLabel->setTextColor(Color4B(108, 108, 108, 255));
     addChild(tipsLabel);
     tipsLabel->setPosition(visibaleSize.width / 2, visibaleSize.height / 3 - 50);
@@ -38,7 +38,7 @@ bool TipsLayer::init() {
     changeLabel->setString("格子到达地面你就输了！");
     addChild(changeLabel);
     changeLabel->setTextColor(Color4B(108, 108, 108, 255));
-    changeLabel->setSystemFontSize(38);
+    changeLabel->setSystemFontSize(30);
     changeLabel->setPosition(visibaleSize.width / 2, visibaleSize.height / 3 - 50);
     changeLabel->setVisible(false);
     
