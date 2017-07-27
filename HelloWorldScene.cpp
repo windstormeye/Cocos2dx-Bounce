@@ -44,6 +44,8 @@ Scene* HelloWorld::createScene()
     outBall = Vec2(0, 0);
     //创建有物理空间的场景
     Scene* scene=Scene::createWithPhysics();
+    //    scene->getPhysicsWorld()->setAutoStep(false);
+    //    scene->getPhysicsWorld()->setFixedUpdateRate(180);
     //设置Debug模式
     //  x  scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
     HelloWorld* layer=HelloWorld::create();
@@ -89,11 +91,6 @@ bool HelloWorld::init()
     auto cclayer = LayerColor::create(Color4B(28, 28, 28, 255));
     this->addChild(cclayer);
     
-    //    this->scheduleUpdate();
-    
-    this->schedule(schedule_selector(HelloWorld::myupdate), 0.001f);
-    //    this->schedule(schedule_selector(HelloWorld::update), 0.01f, 5, 0.0f);
-    
     // 初始化格子
     birthBlock();
     // 初始化小球
@@ -138,13 +135,14 @@ bool HelloWorld::init()
     // 给整个页面设置监听
     this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener, this);
     
-    
     auto warningLabel = Label::create();
     warningLabel->setString("遇到异常情况，请重新开始");
     warningLabel->setColor(Color3B(68, 68, 68));
     warningLabel->setSystemFontSize(28);
     warningLabel->setPosition(Vec2(visibleSize.width / 2, 28));
     groundLayer->addChild(warningLabel);
+    
+    Director::getInstance()->setDisplayStats(true);
     
     return true;
 }
@@ -350,12 +348,28 @@ void HelloWorld::onEnter()
     auto contactListener=EventListenerPhysicsContact::create();
     //设置监听器的碰撞开始函数
     contactListener->onContactBegin = CC_CALLBACK_1(HelloWorld::onContactBegin, this);
-    contactListener->onContactPostSolve = CC_CALLBACK_1(HelloWorld::onContactLeave, this);
     //添加到事件分发器中
     _eventDispatcher->addEventListenerWithSceneGraphPriority(contactListener, this);
+    
+    scheduleOnce(CC_SCHEDULE_SELECTOR(HelloWorld::updateStart), 1);
+    
 }
 
-void HelloWorld::myupdate(float dt){
+void HelloWorld::updateStart(float delta) {
+    m_world->setAutoStep(false);
+    m_world->setFixedUpdateRate(180);
+    
+    scheduleUpdate();
+}
+
+void HelloWorld::update(float dt){
+    
+    for (int i = 0; i < 3; ++i)
+    {
+        m_world->step(1/180.0f);
+    }
+    
+    
     Size visibleSize=Director::getInstance()->getWinSize();
     for (int i = 0; i < (int)ballVec->size(); i ++) {
         auto ball = ballVec->at(i);
@@ -369,7 +383,7 @@ void HelloWorld::myupdate(float dt){
         }
         
         if (ball->getName() == "yes" && isBegin) {
-            if (ball->getPosition().y < visibleSize.height * 0.2 + 21) {
+            if (ball->getPosition().y < visibleSize.height * 0.2 + 32) {
                 ball->getPhysicsBody()->setDynamic(false);
                 // 当有球撞到地面且tipsLayer不为空则直接remove掉置NULL
                 if (tipsLayer != NULL) {
@@ -527,16 +541,6 @@ void HelloWorld::showDropBallParticle(Vec2 vec) {
                                  });
     auto seq = Sequence::create(delayTime, func, nullptr);
     this->runAction(seq);
-}
-
-void HelloWorld::onContactLeave(const cocos2d::PhysicsContact &contact) {
-    Sprite* spriteA=(Sprite*)contact.getShapeA()->getBody()->getNode();
-    Sprite* spriteB=(Sprite*)contact.getShapeB()->getBody()->getNode();
-    
-    if (spriteA != NULL && spriteB != NULL) {
-        int tagA=spriteA->getTag();
-        int tagB=spriteB->getTag();
-    }
 }
 
 bool HelloWorld::onContactBegin(const PhysicsContact& contact)
@@ -706,7 +710,7 @@ void HelloWorld::onTouchEnded(Touch* tTouch,Event* eEvent){
             auto delayTime = DelayTime::create(i * 0.1f);
             auto func = CallFunc::create([this,ball, toX, toY, i]() {
                 ball->getPhysicsBody()->setDynamic(true);
-                ball->getPhysicsBody()->setVelocity(Vect(toX * 4, toY * 4));
+                ball->getPhysicsBody()->setVelocity(Vect(toX * 8, toY * 8));
                 if (i == 0) {
                     ballNumLabel->setVisible(false);
                 }
@@ -737,25 +741,3 @@ void HelloWorld::restartGame() {
     gameScene->setCurrentLevelNum(bestLevelString);
     Director::getInstance()->replaceScene(TransitionMoveInB::create(0.4, gameScene));
 }
-
-// 显示“新增小球”动画
-//void HelloWorld::showAddBallNum(int ballNum, Vec2 vec) {
-//    auto numLabel = Label::create();
-//    numLabel->setPosition(Vec2(vec.x, vec.y));
-//    this->addChild(numLabel, 3000);
-//    string addBallString = "";
-//    int2str(ballNum, addBallString);
-//    numLabel->setString("x " + addBallString);
-//    numLabel->setTextColor(Color4B(0, 139, 0, 255));
-//
-//    ActionInterval *forward = MoveTo::create(1, Vec2(vec.x, vec.y - 50));
-//    numLabel->runAction(forward);
-//
-//    auto delayTime = DelayTime::create(1.0f);
-//    auto func = CallFunc::create([this, numLabel]() {
-//        numLabel->removeFromParent();
-//    });
-//    auto seq = Sequence::create(delayTime, func, nullptr);
-//    this->runAction(seq);
-//
-//}

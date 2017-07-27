@@ -43,17 +43,14 @@ private:
     void birthBall();
     void dropBall(Vec2 vec);
     void showDropBallParticle(Vec2 vec);
-    void speedBtnClick(Ref *pSender, Widget::TouchEventType type);
-    void showAddBallNum(int ballNum, Vec2 vec);
     
 public:
     static cocos2d::Scene* createScene();
     virtual bool init();
     CREATE_FUNC(HelloWorld);
     virtual void onEnter();
-    void  myupdate(float dt);
+    virtual void update(float dt);
     bool onContactBegin(const PhysicsContact& contact);
-    void onContactLeave(const PhysicsContact& contact);
     
     void restartGame();
     void removeTipsLayer();
