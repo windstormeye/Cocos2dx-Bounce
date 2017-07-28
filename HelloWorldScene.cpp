@@ -4,8 +4,14 @@
 #include <math.h>
 #include <stdlib.h>
 #include "gameOverScene.hpp"
+#include "SimpleAudioEngine.h"
+
+#define BALL_BOOM_EFFECT_MUSIC "music/ball_Boom.caf"
+#define DROPBALL_BOOM_EFFECT_MUSIC "music/dropBall_Boom.caf"
+#define BIRTHBLOCK_BOOM_EFFECT_MUSIC "music/birthBlock_Boom.caf"
 
 using namespace std;
+using namespace CocosDenshion;
 USING_NS_CC;
 
 // 是否为第一次触摸
@@ -64,6 +70,11 @@ bool HelloWorld::init()
     {
         return false;
     }
+    
+    SimpleAudioEngine::getInstance()->preloadEffect(BALL_BOOM_EFFECT_MUSIC);
+    SimpleAudioEngine::getInstance()->preloadEffect(DROPBALL_BOOM_EFFECT_MUSIC);
+    SimpleAudioEngine::getInstance()->preloadEffect(BIRTHBLOCK_BOOM_EFFECT_MUSIC);
+    SimpleAudioEngine::getInstance()->setEffectsVolume(1.0f);
     
     Size visibleSize=Director::getInstance()->getWinSize();
     
@@ -476,6 +487,7 @@ void HelloWorld::update(float dt){
                         ballVec->pushBack(greenball);
                     }
                     
+                    SimpleAudioEngine::getInstance()->playEffect(BIRTHBLOCK_BOOM_EFFECT_MUSIC);
                     birthBlock();
                     
                     currentLevelNum ++;
@@ -577,6 +589,7 @@ bool HelloWorld::onContactBegin(const PhysicsContact& contact)
     
     // 判断小球撞上的是不是白圈，spriteA和spriteB都要进行判断
     if (spriteA->getTag() == 1000 && spriteB->getName() == "res/circle1.png") {
+        SimpleAudioEngine::getInstance()->playEffect(DROPBALL_BOOM_EFFECT_MUSIC);
         currentBall = spriteB->getPosition();
         blockVec->erase(spriteB->getTag());
         for (int i = 0; i < blockVec->size(); i++) {
@@ -597,6 +610,7 @@ bool HelloWorld::onContactBegin(const PhysicsContact& contact)
     }
     
     if (spriteB->getTag() == 1000 && spriteA->getName() == "res/circle1.png") {
+        SimpleAudioEngine::getInstance()->playEffect(DROPBALL_BOOM_EFFECT_MUSIC);
         currentBall = spriteA->getPosition();
         blockVec->erase(spriteA->getTag());
         for (int i = 0; i < blockVec->size(); i++) {
@@ -628,6 +642,7 @@ bool HelloWorld::onContactBegin(const PhysicsContact& contact)
         int index = atoi(spriteB->getName().c_str());
         // 保证删除掉的spriteB一点是方格，而不是小球
         if (index == 0 && spriteB->getTag() < 1000) {
+            SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC);
             showParticle(spriteB->getPosition());
             blockVec->erase(spriteB->getTag());
             // 如果出现删除格子后问题，把这改回去
@@ -640,6 +655,8 @@ bool HelloWorld::onContactBegin(const PhysicsContact& contact)
         } else {
             // 增加tagB != 2000解决小球碰撞盒子后打印找不到对应图片的垃圾log
             if (tagB != 2000) {
+                // 播放音乐
+                SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC);
                 std::string str = "res/";
                 std::string fileStr = "";
                 int2str(--index, fileStr);
