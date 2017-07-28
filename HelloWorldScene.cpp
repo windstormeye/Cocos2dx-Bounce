@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include "gameOverScene.hpp"
 
-
 using namespace std;
 USING_NS_CC;
 
@@ -19,14 +18,12 @@ static bool isActivity;
 static Vec2 touchBegin;
 // 球链是否在显示
 static bool isShow;
-// 是否有小球发射出去
-static bool isShoot;
+// 记录是否加过速
+static bool isSpeedUp;
 // 当前成绩
 int currentLevelNum;
 // 记录下白圈的位置信息
 Vec2 currentBall;
-// 记录飞出去的小球位置
-Vec2 outBall;
 
 // 当前球链放大倍数
 float ballLinkScale;
@@ -36,12 +33,11 @@ Scene* HelloWorld::createScene()
     isBegin = true;
     isBoom = false;
     isActivity = false;
-    isShoot = false;
     isShow = false;
+    isSpeedUp = false;
     currentLevelNum = 1;
     touchBegin = Vec2(0, 0);
     currentBall = Vec2(0, 0);
-    outBall = Vec2(0, 0);
     //创建有物理空间的场景
     Scene* scene=Scene::createWithPhysics();
     //    scene->getPhysicsWorld()->setAutoStep(false);
@@ -142,9 +138,30 @@ bool HelloWorld::init()
     warningLabel->setPosition(Vec2(visibleSize.width / 2, 28));
     groundLayer->addChild(warningLabel);
     
-    Director::getInstance()->setDisplayStats(true);
+    auto speedBtn = Button::create("res/light.png");
+    addChild(speedBtn);
+    speedBtn->setPosition(Vec2(50, 50));
+    speedBtn->setContentSize(Size(50, 50));
+    speedBtn->addTouchEventListener(CC_CALLBACK_2(HelloWorld::speedBtnClick, this));
     
     return true;
+}
+
+// 加速效果
+void HelloWorld::speedBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {
+    if (type == Widget::TouchEventType::ENDED) {
+        if (!isSpeedUp && isActivity) {
+            for (int i = 0; i < (int)ballVec->size(); i ++) {
+                auto ball = ballVec->at(i);
+                if (ball->getName() == "yes") {
+                    auto vvv = ball->getPhysicsBody()->getVelocity();
+                    ball->getPhysicsBody()->setVelocity(Vec2(vvv.x * 2, vvv.y * 2));
+                }
+            }
+            Director::getInstance()->getScheduler()->setTimeScale(2.0f);
+            isSpeedUp = true;
+        }
+    }
 }
 
 void HelloWorld::birthBall() {
@@ -196,7 +213,7 @@ void HelloWorld::dropBall(Vec2 vec) {
     ball->setTag(1000);
     this->addChild(ball);
     // 先不给小球设置物理身体
-    ActionInterval *forward = MoveTo::create(0.7, Vec2(vec.x, visibleSize.height * 0.2 + 16));
+    ActionInterval *forward = MoveTo::create(0.4, Vec2(vec.x, visibleSize.height * 0.2 + 16));
     ball->runAction(forward);
 }
 
@@ -487,6 +504,8 @@ void HelloWorld::update(float dt){
                     
                     isActivity = false;
                     isBegin = false;
+                    isSpeedUp = false;
+                    Director::getInstance()->getScheduler()->setTimeScale(1.0f);
                     dropTempballVec->clear();
                     tempballVec->clear();
                 }
@@ -654,7 +673,7 @@ void HelloWorld::onTouchMoved(Touch* tTouch,Event* eEvent){
         ballLink->setVisible(true);
         ballLink->setPosition(Vec2(ball->getPosition().x, ball->getPosition().y + 4));
         ballLink->setRotation(-tTouch->getPreviousLocation().x * 0.5);
-        if (ballLink->getRotation() < -260 || ballLink->getRotation() > -100) {
+        if (ballLink->getRotation() < -268 || ballLink->getRotation() > -92) {
             ballLink->setVisible(false);
             isShow = false;
             return ;
@@ -710,7 +729,7 @@ void HelloWorld::onTouchEnded(Touch* tTouch,Event* eEvent){
             auto delayTime = DelayTime::create(i * 0.1f);
             auto func = CallFunc::create([this,ball, toX, toY, i]() {
                 ball->getPhysicsBody()->setDynamic(true);
-                ball->getPhysicsBody()->setVelocity(Vect(toX * 8, toY * 8));
+                ball->getPhysicsBody()->setVelocity(Vect(toX * 4, toY * 4));
                 if (i == 0) {
                     ballNumLabel->setVisible(false);
                 }

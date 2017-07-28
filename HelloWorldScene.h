@@ -26,7 +26,7 @@ private:
     std::shared_ptr<Vector<Sprite*>>  blockVec = std::make_shared<Vector<Sprite*>>();
     // 保存所有的球
     std::shared_ptr<Vector<Sprite*>>  ballVec = std::make_shared<Vector<Sprite*>>();
-    // 保存发射出去的球
+    // 保存出去的球
     std::shared_ptr<Vector<Sprite*>>  tempballVec = std::make_shared<Vector<Sprite*>>();
     // 保存掉下的球
     std::shared_ptr<Vector<Sprite*>>  dropTempballVec = std::make_shared<Vector<Sprite*>>();
@@ -43,6 +43,7 @@ private:
     void birthBall();
     void dropBall(Vec2 vec);
     void showDropBallParticle(Vec2 vec);
+    void speedBtnClick(Ref *pSender, Widget::TouchEventType type);
     
 public:
     static cocos2d::Scene* createScene();
