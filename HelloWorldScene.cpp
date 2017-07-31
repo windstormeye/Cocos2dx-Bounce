@@ -4,7 +4,9 @@
 #include <math.h>
 #include <stdlib.h>
 #include "gameOverScene.hpp"
+#include "CCSpriteWithHue.hpp"
 #include "SimpleAudioEngine.h"
+
 
 #define BALL_BOOM_EFFECT_MUSIC "music/ball_Boom.caf"
 #define DROPBALL_BOOM_EFFECT_MUSIC "music/dropBall_Boom.caf"
@@ -30,9 +32,6 @@ static bool isSpeedUp;
 int currentLevelNum;
 // 记录下白圈的位置信息
 Vec2 currentBall;
-
-// 当前球链放大倍数
-float ballLinkScale;
 
 Scene* HelloWorld::createScene()
 {
@@ -71,6 +70,8 @@ bool HelloWorld::init()
         return false;
     }
     
+    UserDefault::getInstance()->setStringForKey("isMusic", "open");
+    
     SimpleAudioEngine::getInstance()->preloadEffect(BALL_BOOM_EFFECT_MUSIC);
     SimpleAudioEngine::getInstance()->preloadEffect(DROPBALL_BOOM_EFFECT_MUSIC);
     SimpleAudioEngine::getInstance()->preloadEffect(BIRTHBLOCK_BOOM_EFFECT_MUSIC);
@@ -80,7 +81,7 @@ bool HelloWorld::init()
     
     headLayer = HeadLayer::create();
     this->addChild(headLayer, 1);
-    headLayer->setPosition(Vec2(0, visibleSize.height - 128));
+    headLayer->setPosition(Vec2(0, 0));
     headLayer->setContentSize(Size(visibleSize.width, 128));
     string levelString = "";
     int2str(currentLevelNum, levelString);
@@ -95,22 +96,13 @@ bool HelloWorld::init()
     moveDistance = 1;
     
     // Scene背景
-    auto cclayer = LayerColor::create(Color4B(28, 28, 28, 255));
+    auto cclayer = LayerColor::create(Color4B(30, 30, 30, 255));
     this->addChild(cclayer);
     
     // 初始化格子
     birthBlock();
     // 初始化小球
     birthBall();
-    
-    ballNumLabel = Label::create();
-    addChild(ballNumLabel, 100);
-    ballNumLabel->setSystemFontSize(35);
-    ballNumLabel->setTextColor(Color4B(255, 255, 255, 255));
-    string currentBallSizeString = "";
-    int2str((int)ballVec->size(), currentBallSizeString);
-    ballNumLabel->setString("x " + currentBallSizeString);
-    ballNumLabel->setPosition(visibleSize.width / 2, visibleSize.height * 0.2 - 28);
     
     // 创建球链
     ballLink = Sprite::create("res/bababa.png");
@@ -121,8 +113,8 @@ bool HelloWorld::init()
     
     //创建一个盒子，用来碰撞
     edgeSpace = Sprite::create();
-    edgeSpace->setContentSize(Size(visibleSize.width, visibleSize.height * 0.8 - 128));
-    edgeSpace->setPosition(Vec2(0, visibleSize.height * 0.2));
+    edgeSpace->setContentSize(Size(visibleSize.width, visibleSize.height - 128));
+    edgeSpace->setPosition(Vec2(0, 128));
     PhysicsBody* boundBody=PhysicsBody::createEdgeBox(Size(edgeSpace->getContentSize().width, edgeSpace->getContentSize().height + 10),PhysicsMaterial(0.0f,1.0f,0.0f), 5, Vec2(edgeSpace->getContentSize().width / 2,edgeSpace->getContentSize().height / 2));
     boundBody->setCategoryBitmask(0x0001);
     boundBody->setCollisionBitmask(0x0001);
@@ -131,10 +123,6 @@ bool HelloWorld::init()
     this->addChild(edgeSpace);
     edgeSpace->setTag(2000);
     
-    // 创建地面层
-    auto groundLayer = LayerColor::create(Color4B(38, 38, 38, 255), visibleSize.width, visibleSize.height * 0.2);
-    this->addChild(groundLayer);
-    
     auto listener = EventListenerTouchOneByOne::create();
     listener->onTouchBegan = CC_CALLBACK_2(HelloWorld::onTouchBegan, this);
     listener->onTouchMoved = CC_CALLBACK_2(HelloWorld::onTouchMoved, this);
@@ -142,37 +130,7 @@ bool HelloWorld::init()
     // 给整个页面设置监听
     this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener, this);
     
-    auto warningLabel = Label::create();
-    warningLabel->setString("遇到异常情况，请重新开始");
-    warningLabel->setColor(Color3B(68, 68, 68));
-    warningLabel->setSystemFontSize(28);
-    warningLabel->setPosition(Vec2(visibleSize.width / 2, 28));
-    groundLayer->addChild(warningLabel);
-    
-    auto speedBtn = Button::create("res/light.png");
-    addChild(speedBtn);
-    speedBtn->setPosition(Vec2(50, 50));
-    speedBtn->setContentSize(Size(50, 50));
-    speedBtn->addTouchEventListener(CC_CALLBACK_2(HelloWorld::speedBtnClick, this));
-    
     return true;
-}
-
-// 加速效果
-void HelloWorld::speedBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {
-    if (type == Widget::TouchEventType::ENDED) {
-        if (!isSpeedUp && isActivity) {
-            for (int i = 0; i < (int)ballVec->size(); i ++) {
-                auto ball = ballVec->at(i);
-                if (ball->getName() == "yes") {
-                    auto vvv = ball->getPhysicsBody()->getVelocity();
-                    ball->getPhysicsBody()->setVelocity(Vec2(vvv.x * 2, vvv.y * 2));
-                }
-            }
-            Director::getInstance()->getScheduler()->setTimeScale(2.0f);
-            isSpeedUp = true;
-        }
-    }
 }
 
 void HelloWorld::birthBall() {
@@ -185,7 +143,7 @@ void HelloWorld::birthBall() {
         auto tempBall = tempballVec->at(0);
         ball->setPosition(tempBall->getPosition().x, tempBall->getPosition().y);
     } else {
-        ball->setPosition(visibleSize.width/2, visibleSize.height * 0.2 + 16);
+        ball->setPosition(visibleSize.width/2, 128 + 16);
     }
     //创建物体，并且物体的形状为圆形，第一参数为半径，第二个参数为物体材质
     //第三个参数为边的厚度,就是在Debug模式下看到的物体外面线条的厚度，默认为0
@@ -224,12 +182,12 @@ void HelloWorld::dropBall(Vec2 vec) {
     ball->setTag(1000);
     this->addChild(ball);
     // 先不给小球设置物理身体
-    ActionInterval *forward = MoveTo::create(0.4, Vec2(vec.x, visibleSize.height * 0.2 + 16));
+    ActionInterval *forward = MoveTo::create(0.4, Vec2(vec.x, 128 + 16));
     ball->runAction(forward);
 }
 
 void HelloWorld::birthCircle(Vec2 vec) {
-    Sprite *block = Sprite::create("res/circle1.png");
+    Sprite *block = Sprite::create("res/circle.png");
     block->setName("res/circle1.png");
     blockVec->pushBack(block);
     block->setPosition(vec.x, vec.y);
@@ -254,20 +212,8 @@ void HelloWorld::birthCircle(Vec2 vec) {
     block->setTag((int)blockVec->getIndex(block));
     this->addChild(block);
     
-    auto animation = Animation::create();
-    for(int i = 1;i <= 5;i++)
-    {
-        string str = "res/circle";
-        string tempStr = "";
-        int2str(i, tempStr);
-        str = str + tempStr + ".png";
-        animation->addSpriteFrameWithFile(str);
-    }
-    animation->setDelayPerUnit(1.0f/15.0f);         // 1秒内实现10帧的播放
-    animation->setRestoreOriginalFrame(true);
-    animation->setLoops(-1);
-    auto animate = Animate::create(animation);
-    block->runAction(RepeatForever::create(Sequence::create(animate,NULL)));
+    ActionInterval * rotateto = RotateBy::create(0.5, -300);
+    block->runAction(RepeatForever::create(Sequence::create(rotateto,NULL)));
 }
 
 void HelloWorld::birthBlock() {
@@ -279,7 +225,7 @@ void HelloWorld::birthBlock() {
         auto block = blockVec->at(i);
         block->setPosition(Vec2(block->getPosition().x, block->getPosition().y - 95));
         // 如果当前格子位于地板之下
-        if (block->getPosition().y < Director::getInstance()->getWinSize().height * 0.2 + 85) {
+        if (block->getPosition().y < 128 + 85) {
             restartGame();
             return ;
         }
@@ -324,7 +270,7 @@ void HelloWorld::birthBlock() {
         auto delayTime = DelayTime::create(0.2f);
         auto func = CallFunc::create([this, num, x, isCicle, i]() mutable {
             if (isCicle && times && blockVec->size() != 0) {
-                this->birthCircle(Vec2(x + 95 * num, Director::getInstance()->getWinSize().height - 255));
+                this->birthCircle(Vec2(x + 95 * num, Director::getInstance()->getWinSize().height - 150));
                 this->times = 0;
             } else {
                 // 随机生成格子的图片
@@ -338,8 +284,11 @@ void HelloWorld::birthBlock() {
                 const char* cstring = str.c_str();
                 
                 Sprite *block = Sprite::create(cstring);
+                //                auto block = SpriteWithHue::create("res/blockimg.png");
+                //                block->setHue(1);
                 blockVec->pushBack(block);
-                block->setPosition(x + 95 * num, Director::getInstance()->getWinSize().height - 255);
+                
+                block->setPosition(x + 95 * num, Director::getInstance()->getWinSize().height - 150);
                 PhysicsBody *blockBody = PhysicsBody::createBox(Size(85, 85));
                 //是否设置物体为静态
                 blockBody->setDynamic(false);
@@ -361,7 +310,6 @@ void HelloWorld::birthBlock() {
                 int2str(k, nameStr);
                 block->setName(nameStr);
                 this->addChild(block);
-                
             }
         });
         auto seq = Sequence::create(delayTime, func, nullptr);
@@ -397,8 +345,8 @@ void HelloWorld::update(float dt){
         m_world->step(1/180.0f);
     }
     
-    
     Size visibleSize=Director::getInstance()->getWinSize();
+    
     for (int i = 0; i < (int)ballVec->size(); i ++) {
         auto ball = ballVec->at(i);
         // 如果有飞出去的球
@@ -411,7 +359,7 @@ void HelloWorld::update(float dt){
         }
         
         if (ball->getName() == "yes" && isBegin) {
-            if (ball->getPosition().y < visibleSize.height * 0.2 + 32) {
+            if (ball->getPosition().y < 128 + 32) {
                 ball->getPhysicsBody()->setDynamic(false);
                 // 当有球撞到地面且tipsLayer不为空则直接remove掉置NULL
                 if (tipsLayer != NULL) {
@@ -421,13 +369,13 @@ void HelloWorld::update(float dt){
                 // 如果容器内放的一个球以上
                 if (tempballVec->size() != 0) {
                     auto tempBall = tempballVec->at(0);
-                    ball->setPosition(ball->getPosition().x, visibleSize.height * 0.2 + 16);
+                    ball->setPosition(ball->getPosition().x, 128 + 16);
                     // 让触底的小球回到第一个触底的小球所处的位置上
                     ActionInterval *forward = MoveTo::create(0.15, Vec2(tempBall->getPosition().x, tempBall->getPosition().y));
                     ball->runAction(forward);
                 } else {
                     // 加了else，解决多个触底小球回不到第一个触底小球位置的问题
-                    ball->setPosition(ball->getPosition().x, visibleSize.height * 0.2 + 16);
+                    ball->setPosition(ball->getPosition().x, 128 + 16);
                 }
                 // 解决因为帧数太快导致多次添加小球的问题
                 if (tempballVec->size() == 0) {
@@ -455,45 +403,52 @@ void HelloWorld::update(float dt){
                 
                 if (tempballVec->size() == ballVec->size()) {
                     auto tempBall = tempballVec->at(0);
-                    for (int j = 0; j < (int)dropTempballVec->size(); j++) {
-                        auto greenball = dropTempballVec->at(j);
-                        // 给掉下的小球添加物理身体
-                        PhysicsBody* ballBodyOne=PhysicsBody::createCircle(ball->getContentSize().width/2);
-                        ballBodyOne->setDynamic(false);
-                        ballBodyOne->getShape(0)->setRestitution(1.0f);
-                        ballBodyOne->getShape(0)->setFriction(0.0f);
-                        ballBodyOne->getShape(0)->setDensity(1.0f);
-                        ballBodyOne->setGravityEnable(false);
-                        ballBodyOne->setCategoryBitmask(0x0001);
-                        ballBodyOne->setCollisionBitmask(0x0001);
-                        ballBodyOne->setContactTestBitmask(0x0001);
-                        greenball->setPhysicsBody(ballBodyOne);
-                        
-                        ActionInterval *forward = MoveTo::create(0.15, Vec2(tempBall->getPosition().x, tempBall->getPosition().y));
-                        greenball->runAction(forward);
-                        
-                        auto delayTime = DelayTime::create(j * 0.15f);
-                        auto func = CallFunc::create([this, greenball, j]()
-                                                     {
-                                                         Texture2D* texture = Director::getInstance()->getTextureCache()->addImage("res/ball.png");
-                                                         greenball->setTexture(texture);
-                                                         
-                                                         if (j == (int)dropTempballVec->size()) {
+                    if ((int)dropTempballVec->size() != 0) {
+                        for (int j = 0; j < (int)dropTempballVec->size(); j++) {
+                            auto greenball = dropTempballVec->at(j);
+                            // 给掉下的小球添加物理身体
+                            PhysicsBody* ballBodyOne=PhysicsBody::createCircle(ball->getContentSize().width/2);
+                            ballBodyOne->setDynamic(false);
+                            ballBodyOne->getShape(0)->setRestitution(1.0f);
+                            ballBodyOne->getShape(0)->setFriction(0.0f);
+                            ballBodyOne->getShape(0)->setDensity(1.0f);
+                            ballBodyOne->setGravityEnable(false);
+                            ballBodyOne->setCategoryBitmask(0x0001);
+                            ballBodyOne->setCollisionBitmask(0x0001);
+                            ballBodyOne->setContactTestBitmask(0x0001);
+                            greenball->setPhysicsBody(ballBodyOne);
+                            
+                            ActionInterval *forward = MoveTo::create(0.15, Vec2(tempBall->getPosition().x, tempBall->getPosition().y));
+                            greenball->runAction(forward);
+                            
+                            auto delayTime = DelayTime::create(j * 0.15f);
+                            auto func = CallFunc::create([this, greenball, j]()
+                                                         {
+                                                             Texture2D* texture = Director::getInstance()->getTextureCache()->addImage("res/ball.png");
+                                                             greenball->setTexture(texture);
                                                              
-                                                         }
-                                                     });
-                        auto seq = Sequence::create(delayTime, func, nullptr);
-                        this->runAction(seq);
-                        ballVec->pushBack(greenball);
+                                                             if (j == (int)dropTempballVec->size()) {
+                                                                 
+                                                             }
+                                                         });
+                            auto seq = Sequence::create(delayTime, func, nullptr);
+                            this->runAction(seq);
+                            ballVec->pushBack(greenball);
+                        }
                     }
                     
-                    SimpleAudioEngine::getInstance()->playEffect(BIRTHBLOCK_BOOM_EFFECT_MUSIC);
+                    //                    SimpleAudioEngine::getInstance()->playEffect(BIRTHBLOCK_BOOM_EFFECT_MUSIC);
+                    
                     birthBlock();
                     
                     currentLevelNum ++;
                     string levelString = "";
                     int2str(currentLevelNum, levelString);
                     headLayer->changeCurrentLevelLabelText(levelString);
+                    
+                    string ballString = "";
+                    int2str((int)ballVec->size(), ballString);
+                    headLayer->changeCurrnetBallLabelText(ballString);
                     
                     // 更新历史最好成绩
                     string oldLevelString = UserDefault::getInstance()->getStringForKey("BestLevel");
@@ -505,18 +460,13 @@ void HelloWorld::update(float dt){
                         headLayer->updateBestLevelLabelText();
                     }
                     
-                    ballNumLabel->setPosition(Vec2(tempBall->getPosition().x, tempBall->getPosition().y - 35));
-                    ballNumLabel->setVisible(true);
-                    string currentBallSizeString = "";
-                    int2str((int)ballVec->size(), currentBallSizeString);
-                    ballNumLabel->setString("x " + currentBallSizeString);
-                    //                    if (dropTempballVec->size() != 0) {
-                    //                        showAddBallNum((int)dropTempballVec->size(), tempBall->getPosition());
-                    //                    }
-                    
                     isActivity = false;
                     isBegin = false;
                     isSpeedUp = false;
+                    
+                    headLayer->updateBallVec(ballVec);
+                    headLayer->updateSpeedStatus(isSpeedUp, isActivity);
+                    
                     Director::getInstance()->getScheduler()->setTimeScale(1.0f);
                     dropTempballVec->clear();
                     tempballVec->clear();
@@ -589,7 +539,7 @@ bool HelloWorld::onContactBegin(const PhysicsContact& contact)
     
     // 判断小球撞上的是不是白圈，spriteA和spriteB都要进行判断
     if (spriteA->getTag() == 1000 && spriteB->getName() == "res/circle1.png") {
-        SimpleAudioEngine::getInstance()->playEffect(DROPBALL_BOOM_EFFECT_MUSIC);
+        //        SimpleAudioEngine::getInstance()->playEffect(DROPBALL_BOOM_EFFECT_MUSIC);
         currentBall = spriteB->getPosition();
         blockVec->erase(spriteB->getTag());
         for (int i = 0; i < blockVec->size(); i++) {
@@ -610,7 +560,7 @@ bool HelloWorld::onContactBegin(const PhysicsContact& contact)
     }
     
     if (spriteB->getTag() == 1000 && spriteA->getName() == "res/circle1.png") {
-        SimpleAudioEngine::getInstance()->playEffect(DROPBALL_BOOM_EFFECT_MUSIC);
+        //        SimpleAudioEngine::getInstance()->playEffect(DROPBALL_BOOM_EFFECT_MUSIC);
         currentBall = spriteA->getPosition();
         blockVec->erase(spriteA->getTag());
         for (int i = 0; i < blockVec->size(); i++) {
@@ -718,12 +668,7 @@ void HelloWorld::onTouchMoved(Touch* tTouch,Event* eEvent){
                 }
             }
         ballLink->setScale(scale, scale);
-        ballLinkScale = scale;
     }
-}
-
-void HelloWorld::removeTipsLayer() {
-    
 }
 
 void HelloWorld::onTouchEnded(Touch* tTouch,Event* eEvent){
@@ -747,15 +692,16 @@ void HelloWorld::onTouchEnded(Touch* tTouch,Event* eEvent){
             auto func = CallFunc::create([this,ball, toX, toY, i]() {
                 ball->getPhysicsBody()->setDynamic(true);
                 ball->getPhysicsBody()->setVelocity(Vect(toX * 4, toY * 4));
-                if (i == 0) {
-                    ballNumLabel->setVisible(false);
-                }
             });
             auto seq = Sequence::create(delayTime, func, nullptr);
             this->runAction(seq);
         }
         
         isActivity = true;
+        
+        headLayer->updateBallVec(ballVec);
+        headLayer->updateSpeedStatus(isSpeedUp, isActivity);
+        
         if (tipsLayer != NULL) {
             tipsLayer->changeShow();
         }

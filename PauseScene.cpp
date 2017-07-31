@@ -8,7 +8,7 @@
 
 #include "PauseScene.hpp"
 #include "HelloWorldScene.h"
-#include "BeginScene.hpp"
+#include "BeginScene.h"
 
 
 Scene* PauseScene::createScene()

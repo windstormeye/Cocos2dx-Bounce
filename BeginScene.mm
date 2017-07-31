@@ -6,8 +6,9 @@
 //
 //
 
-#include "BeginScene.hpp"
+#include "BeginScene.h"
 #include "HelloWorldScene.h"
+#include "PJRankViewController.h"
 
 Scene* BeginScene::createScene()
 {
@@ -19,37 +20,54 @@ bool BeginScene::init() {
     if (!Scene::init()) {
         return false;
     }
-    Size visible = Director::getInstance()->getWinSize();
+    cocos2d::Size visible = Director::getInstance()->getWinSize();
     
     auto bgLayer = Layer::create();
     addChild(bgLayer);
-    bgLayer->setContentSize(Size(visible.width, visible.height));
+    bgLayer->setContentSize(cocos2d::Size(visible.width, visible.height));
     bgLayer->setPosition(Vec2(0, 0));
     
     auto bgImg = Sprite::create("res/bg.png");
-    bgImg->setContentSize(Size(bgLayer->getContentSize().width, bgLayer->getContentSize().height));
+    bgImg->setContentSize(cocos2d::Size(bgLayer->getContentSize().width, bgLayer->getContentSize().height));
     bgImg->setPosition(Vec2(bgLayer->getContentSize().width / 2, bgLayer->getContentSize().height / 2));
     bgLayer->addChild(bgImg);
     
-    auto homeBtnBGLayer = LayerColor::create(Color4B(235, 69, 57, 255), visible.width * 0.6, visible.height * 0.1);
+    auto beginBtnBGLayer = LayerColor::create(Color4B(235, 69, 57, 255), visible.width * 0.6, visible.height * 0.1);
     auto beginLogo = Sprite::create("res/begin_game.png");
-    homeBtnBGLayer->addChild(beginLogo);
-    beginLogo->setContentSize(Size(visible.height * 0.1 - 20, visible.height * 0.1 - 20));
-    beginLogo->setPosition(Vec2(beginLogo->getContentSize().width / 2 + 10, (homeBtnBGLayer->getContentSize().height - 20) / 2 + 10));
+    beginBtnBGLayer->addChild(beginLogo);
+    beginLogo->setContentSize(cocos2d::Size(visible.height * 0.1 - 20, visible.height * 0.1 - 20));
+    beginLogo->setPosition(Vec2(beginLogo->getContentSize().width / 2 + 10, (beginBtnBGLayer->getContentSize().height - 20) / 2 + 10));
     
-    auto homeBtn = Button::create();
-    homeBtn->setTitleText("开始 PLAY");
-    homeBtn->setTitleFontSize(50);
-    homeBtnBGLayer->addChild(homeBtn);
-    homeBtn->setPosition(Vec2(beginLogo->getContentSize().width * 2 + beginLogo->getPosition().x, homeBtnBGLayer->getContentSize().height / 2));
-    homeBtn->addTouchEventListener(CC_CALLBACK_2(BeginScene::beginBtnClick, this));
+    auto beginBtn = Button::create();
+    beginBtn->setTitleText("开始 PLAY");
+    beginBtn->setTitleFontSize(50);
+    beginBtnBGLayer->addChild(beginBtn);
+    beginBtn->setPosition(Vec2(beginLogo->getContentSize().width * 2 + beginLogo->getPosition().x, beginBtnBGLayer->getContentSize().height / 2));
+    beginBtn->addTouchEventListener(CC_CALLBACK_2(BeginScene::beginBtnClick, this));
     
-    auto homeBtnClipNode = createRoundedRectMaskNode(Size(visible.width * 0.6, visible.height * 0.1), 60, 1.0f, 50);
-    homeBtnClipNode->addChild(homeBtnBGLayer);
+    auto homeBtnClipNode = createRoundedRectMaskNode(cocos2d::Size(visible.width * 0.6, visible.height * 0.1), 60, 1.0f, 50);
+    homeBtnClipNode->addChild(beginBtnBGLayer);
     homeBtnClipNode->setPosition((visible.width - visible.width * 0.6) / 2, visible.height / 2);
     bgLayer->addChild(homeBtnClipNode);
     
+    auto threeContentLayer = Layer::create();
+    addChild(threeContentLayer);
+    
+    auto rankBtn = Button::create("res/rank.png");
+    addChild(rankBtn);
+    rankBtn->setContentSize(cocos2d::Size(visible.height * 0.1 - 20, visible.height * 0.1));
+    rankBtn->setPosition(Vec2((visible.width - visible.width * 0.6) / 2, homeBtnClipNode->getPosition().y - visible.height * 0.15));
+    rankBtn->addTouchEventListener(CC_CALLBACK_2(BeginScene::rankBtnClick, this));
+    
     return true;
+}
+
+void BeginScene::rankBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {
+    PJRankViewController *vc = [PJRankViewController new];
+    [[UIApplication sharedApplication].keyWindow.rootViewController presentViewController:vc animated:YES completion:^{
+        
+    }];
+    
 }
 
 void BeginScene::beginBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {
@@ -71,7 +89,7 @@ void BeginScene::appendCubicBezier(int startPoint, std::vector<Vec2>& verts, con
     }
 }
 
-Node* BeginScene::createRoundedRectMaskNode(Size size, float radius, float borderWidth, int cornerSegments)
+Node* BeginScene::createRoundedRectMaskNode(cocos2d::Size size, float radius, float borderWidth, int cornerSegments)
 {
     const float kappa = 0.552228474;
     float oneMinusKappa = (1.0f-kappa);

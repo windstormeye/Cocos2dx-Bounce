@@ -8,7 +8,7 @@
 
 #include "gameOverScene.hpp"
 #include "HelloWorldScene.h"
-#include "BeginScene.hpp"
+#include "BeginScene.h"
 
 Scene *GameOverScene::createScene() {
     return GameOverScene::create();
