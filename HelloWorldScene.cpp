@@ -273,19 +273,23 @@ void HelloWorld::birthBlock() {
                 this->birthCircle(Vec2(x + 95 * num, Director::getInstance()->getWinSize().height - 150));
                 this->times = 0;
             } else {
-                // 随机生成格子的图片
-                int k = arc4random() % 5;
+                auto block = SpriteWithHue::create("res/blockimg.png");
+                auto blockLabel = Label::create();
+                block->addChild(blockLabel);
                 
-                std::string str = "res/";
-                std::string fileStr = "";
-                int2str(k, fileStr);
-                fileStr.append(".png");
-                str.append(fileStr);
-                const char* cstring = str.c_str();
-                
-                Sprite *block = Sprite::create(cstring);
-                //                auto block = SpriteWithHue::create("res/blockimg.png");
-                //                block->setHue(1);
+                int isHigh = arc4random() % 2;
+                string numStr = "";
+                if (isHigh) {
+                    int2str(currentLevelNum * 2, numStr);
+                    block->setHue(CC_DEGREES_TO_RADIANS(currentLevelNum * 2 * 5));
+                } else {
+                    int2str(currentLevelNum, numStr);
+                    block->setHue(CC_DEGREES_TO_RADIANS(currentLevelNum * 5));
+                }
+                blockLabel->setString(numStr);
+                blockLabel->setColor(Color3B(0, 0, 0));
+                blockLabel->setSystemFontSize(38);
+                blockLabel->setPosition(Vec2(block->getContentSize().width / 2, block->getContentSize().height / 2));
                 blockVec->pushBack(block);
                 
                 block->setPosition(x + 95 * num, Director::getInstance()->getWinSize().height - 150);
@@ -306,9 +310,7 @@ void HelloWorld::birthBlock() {
                 block->setPhysicsBody(blockBody);
                 //设置标志
                 block->setTag((int)blockVec->getIndex(block));
-                std::string nameStr = "";
-                int2str(k, nameStr);
-                block->setName(nameStr);
+                block->setName(numStr);
                 this->addChild(block);
             }
         });
@@ -530,7 +532,7 @@ bool HelloWorld::onContactBegin(const PhysicsContact& contact)
     Sprite* spriteB=(Sprite*)contact.getShapeB()->getBody()->getNode();
     
     // 解决两个小球争夺一个格子
-    if (spriteB == NULL) {
+    if (spriteB == NULL || spriteA == NULL) {
         return false;
     }
     
@@ -589,35 +591,36 @@ bool HelloWorld::onContactBegin(const PhysicsContact& contact)
         spriteA->setName("yes");
         isBegin = true;
         
-        int index = atoi(spriteB->getName().c_str());
-        // 保证删除掉的spriteB一点是方格，而不是小球
-        if (index == 0 && spriteB->getTag() < 1000) {
-            SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC);
-            showParticle(spriteB->getPosition());
-            blockVec->erase(spriteB->getTag());
-            // 如果出现删除格子后问题，把这改回去
-            spriteB->removeFromParentAndCleanup(true);
-            // 删除vector里的元素后，其余剩下元素都往前移动，需要重新给剩下的元素重新赋值tag
-            for (int i = 0; i < blockVec->size(); i++) {
-                auto block = blockVec->at(i);
-                block->setTag((int)blockVec->getIndex(block));
-            }
-        } else {
-            // 增加tagB != 2000解决小球碰撞盒子后打印找不到对应图片的垃圾log
-            if (tagB != 2000) {
-                // 播放音乐
+        auto spriteC = (SpriteWithHue *)contact.getShapeB()->getBody()->getNode();
+        auto tagC = spriteC->getTag();
+        if (tagB != 2000) {
+            auto label = (Label *)spriteC->getChildren().at(0);
+            int index = atoi(label->getString().c_str());
+            // 保证删除掉的spriteB一点是方格，而不是小球
+            if (index == 1 && tagC < 1000) {
+                spriteC->setHue(CC_DEGREES_TO_RADIANS(0));
+                
                 SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC);
-                std::string str = "res/";
-                std::string fileStr = "";
-                int2str(--index, fileStr);
-                fileStr.append(".png");
-                str.append(fileStr);
-                const char* cstring = str.c_str();
-                Texture2D* texture = Director::getInstance()->getTextureCache()->addImage(cstring);
-                spriteB->setTexture(texture);
-                std::string nameStr = "";
-                int2str(index, nameStr);
-                spriteB->setName(nameStr);
+                showParticle(spriteC->getPosition());
+                blockVec->erase(spriteC->getTag());
+                // 如果出现删除格子后问题，把这改回去
+                spriteC->removeFromParentAndCleanup(true);
+                // 删除vector里的元素后，其余剩下元素都往前移动，需要重新给剩下的元素重新赋值tag
+                for (int i = 0; i < blockVec->size(); i++) {
+                    auto block = blockVec->at(i);
+                    block->setTag((int)blockVec->getIndex(block));
+                }
+            } else {
+                // 增加tagB != 2000解决小球碰撞盒子后打印找不到对应图片的垃圾log
+                if (tagC!= 2000) {
+                    // 播放音乐
+                    //                SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC);
+                    std::string nameStr = "";
+                    int2str(--index, nameStr);
+                    label->setString(nameStr);
+                    spriteC->setHue(CC_DEGREES_TO_RADIANS(index * 5));
+                    
+                }
             }
         }
     }
@@ -625,7 +628,8 @@ bool HelloWorld::onContactBegin(const PhysicsContact& contact)
 }
 
 bool HelloWorld::onTouchBegan(Touch* tTouch,Event* eEvent){
-    if (this->getBoundingBox().containsPoint(tTouch->getLocation())){//判断触摸点是否在目标的范围内
+    if (this->getBoundingBox().containsPoint(tTouch->getLocation())){
+        //判断触摸点是否在目标的范围内
         
         touchBegin = Vec2(tTouch->getPreviousLocation().x, tTouch->getPreviousLocation().y);
         

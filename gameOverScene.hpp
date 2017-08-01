@@ -28,7 +28,7 @@ public:
     Sprite* createScreenshotSprite();
     void restartBtnClick(Ref *pSender, Widget::TouchEventType type);
     void backBtnClick(Ref *pSender, Widget::TouchEventType type);
-
+    
     void setCurrentLevelNum(const std::string &text);
 };
 

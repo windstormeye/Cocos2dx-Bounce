@@ -14,8 +14,7 @@ class HelloWorld : public cocos2d::Scene {
 private:
     Sprite *edgeSpace;
     Sprite *ballLink;
-    // 显示小球个数
-    Label *ballNumLabel;
+    
     PhysicsWorld* m_world;
     float moveDistance;
     
@@ -43,7 +42,6 @@ private:
     void birthBall();
     void dropBall(Vec2 vec);
     void showDropBallParticle(Vec2 vec);
-    void speedBtnClick(Ref *pSender, Widget::TouchEventType type);
     
 public:
     static cocos2d::Scene* createScene();
@@ -54,7 +52,6 @@ public:
     bool onContactBegin(const PhysicsContact& contact);
     
     void restartGame();
-    void removeTipsLayer();
     void showPauseLayer();
     void updateStart(float delta);
     

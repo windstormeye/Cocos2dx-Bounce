@@ -97,6 +97,7 @@ void HeadLayer::pauseBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type
     if (type == Widget::TouchEventType::ENDED) {
         // 以淡出的方式出现暂停场景
         Director::getInstance()->pushScene(TransitionCrossFade::create(0.4, PauseScene::createScene()));
+        //        Director::getInstance()->pushScene(TransitionCrossFade::create(0.4, GameOverScene::createScene()));
     }
 }
 

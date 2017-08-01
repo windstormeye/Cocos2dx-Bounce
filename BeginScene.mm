@@ -32,6 +32,18 @@ bool BeginScene::init() {
     bgImg->setPosition(Vec2(bgLayer->getContentSize().width / 2, bgLayer->getContentSize().height / 2));
     bgLayer->addChild(bgImg);
     
+    auto logoSprite = Sprite::create("res/logo.png");
+    addChild(logoSprite, 2);
+    logoSprite->setPosition(Vec2(visible.width / 2, visible.height * 0.7));
+    logoSprite->setScale(0.7, 0.7);
+    
+    auto logoRotationSprite = Sprite::create("res/logo_ratation.png");
+    addChild(logoRotationSprite, 1);
+    logoRotationSprite->setPosition(Vec2(visible.width / 2 + 162, logoSprite->getPosition().y - logoSprite->getContentSize().height / 3.3));
+    logoRotationSprite->setContentSize(cocos2d::Size(90, 90));
+    ActionInterval * rotateto = RotateBy::create(0.5, -300);
+    logoRotationSprite->runAction(RepeatForever::create(Sequence::create(rotateto,NULL)));
+    
     auto beginBtnBGLayer = LayerColor::create(Color4B(235, 69, 57, 255), visible.width * 0.6, visible.height * 0.1);
     auto beginLogo = Sprite::create("res/begin_game.png");
     beginBtnBGLayer->addChild(beginLogo);
@@ -47,7 +59,7 @@ bool BeginScene::init() {
     
     auto homeBtnClipNode = createRoundedRectMaskNode(cocos2d::Size(visible.width * 0.6, visible.height * 0.1), 60, 1.0f, 50);
     homeBtnClipNode->addChild(beginBtnBGLayer);
-    homeBtnClipNode->setPosition((visible.width - visible.width * 0.6) / 2, visible.height / 2);
+    homeBtnClipNode->setPosition((visible.width - visible.width * 0.6) / 2, visible.height * 0.45);
     bgLayer->addChild(homeBtnClipNode);
     
     auto threeContentLayer = Layer::create();

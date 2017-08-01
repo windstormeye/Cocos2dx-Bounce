@@ -24,6 +24,11 @@ bool GameOverScene::init() {
     auto bgLayer = LayerColor::create(Color4B(30, 30, 30, 255), visible.width, visible.height);
     addChild(bgLayer);
     
+    auto logo2Sprite = Sprite::create("res/logo2.png");
+    addChild(logo2Sprite);
+    logo2Sprite->setPosition(Vec2(visible.width / 2, visible.height * 0.87));
+    logo2Sprite->setScale(0.7, 0.7);
+    
     // gamaOver缺个O
     auto gameoverLogo = Sprite::create("res/gameover.png");
     addChild(gameoverLogo);
@@ -78,13 +83,13 @@ bool GameOverScene::init() {
 
 void GameOverScene::restartBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {
     if (type == Widget::TouchEventType::ENDED) {
-        Director::getInstance()->replaceScene(TransitionFlipX::create(0.4, HelloWorld::createScene()));
+        Director::getInstance()->replaceScene(TransitionCrossFade::create(0.4, HelloWorld::createScene()));
     }
 }
 
 void GameOverScene::backBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {
     if (type == Widget::TouchEventType::ENDED) {
-        Director::getInstance()->replaceScene(TransitionMoveInT::create(0.4, BeginScene::createScene()));
+        Director::getInstance()->replaceScene(TransitionCrossFade::create(0.4, BeginScene::createScene()));
     }
 }
 

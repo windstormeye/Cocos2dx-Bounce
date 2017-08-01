@@ -10,6 +10,9 @@
 #include "HelloWorldScene.h"
 #include "BeginScene.h"
 
+#include "SimpleAudioEngine.h"
+
+using namespace CocosDenshion;
 
 Scene* PauseScene::createScene()
 {
@@ -115,7 +118,7 @@ void PauseScene::backBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type
 
 void PauseScene::restartBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {
     if (type == Widget::TouchEventType::ENDED) {
-        Director::getInstance()->replaceScene(TransitionFlipX::create(0.4, HelloWorld::createScene()));
+        Director::getInstance()->replaceScene(TransitionCrossFade::create(0.4, HelloWorld::createScene()));
     }
 }
 
