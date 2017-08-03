@@ -10,6 +10,8 @@
 #include "HelloWorldScene.h"
 #include "BeginScene.h"
 
+
+
 Scene *GameOverScene::createScene() {
     return GameOverScene::create();
 }
@@ -78,7 +80,41 @@ bool GameOverScene::init() {
     backBtn->setPosition(Vec2(visible.width / 2, restartBtn->getPosition().y - restartBtn->getContentSize().height));
     backBtn->addTouchEventListener(CC_CALLBACK_2(GameOverScene::backBtnClick, this));
     
+    auto resurgenceSprite = Sprite::create("res/resurgence.png");
+    addChild(resurgenceSprite);
+    resurgenceSprite->setPosition(Vec2(visible.width / 2, visible.height * 0.13));
+    resurgenceSprite->setScale(0.6);
+    ActionInterval * scalaBy = ScaleTo::create(0.3, 0.8);
+    ActionInterval * scalaBy2 = ScaleTo::create(0.3, 0.6);
+    resurgenceSprite->runAction(RepeatForever::create(Sequence::create(scalaBy, scalaBy2, NULL)));
+    
+    auto resurgenceBtn = Button::create("res/resurgence_white.png");
+    addChild(resurgenceBtn);
+    resurgenceBtn->setPosition(Vec2(visible.width / 2, visible.height * 0.13));
+    resurgenceBtn->setScale(0.8);
+    resurgenceBtn->addTouchEventListener(CC_CALLBACK_2(GameOverScene::resurgenceBtnClick, this));
+    
+    auto rankBtn = Button::create("res/rank.png");
+    addChild(rankBtn);
+    rankBtn->setScale(0.7);
+    rankBtn->setPosition(Vec2(visible.width / 2 - 200, resurgenceBtn->getPosition().y));
+    
+    auto infoBtn = Button::create("res/info.png");
+    addChild(infoBtn);
+    infoBtn->setScale(0.7);
+    infoBtn->setPosition(Vec2(visible.width / 2 + 200, resurgenceBtn->getPosition().y));
+    
     return true;
+}
+
+void GameOverScene::resurgenceBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {
+    if (type == Widget::TouchEventType::ENDED) {
+        if (!UserDefault::getInstance()->getBoolForKey("isResurgenceed")) {
+            UserDefault::getInstance()->setBoolForKey("isResurgence", true);
+            UserDefault::getInstance()->flush();
+        }
+        Director::getInstance()->replaceScene(TransitionMoveInB::create(0.4, HelloWorld::createScene()));
+    }
 }
 
 void GameOverScene::restartBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {

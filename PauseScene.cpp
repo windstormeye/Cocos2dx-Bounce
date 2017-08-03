@@ -90,7 +90,11 @@ bool PauseScene::init() {
     
     musicBtn = Button::create("res/music_on.png");
     contentLayer->addChild(musicBtn);
-    musicBtn->setName("res/music_on.png");
+    if (UserDefault::getInstance()->getBoolForKey("isMusic")) {
+        musicBtn->loadTextureNormal("res/music_on.png");
+    } else {
+        musicBtn->loadTextureNormal("res/music_off.png");
+    }
     musicBtn->setScale(0.6);
     musicBtn->setPosition(Vec2(visible.width / 2, 100));
     musicBtn->addTouchEventListener(CC_CALLBACK_2(PauseScene::musicBtnClick, this));
@@ -100,12 +104,14 @@ bool PauseScene::init() {
 
 void PauseScene::musicBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {
     if (type == Widget::TouchEventType::ENDED) {
-        if (musicBtn->getName() == "res/music_on.png") {
+        if (UserDefault::getInstance()->getBoolForKey("isMusic")) {
             musicBtn->loadTextureNormal("res/music_off.png");
-            musicBtn->setName("res/music_off.png");
+            UserDefault::getInstance()->setBoolForKey("isMusic", false);
+            UserDefault::getInstance()->flush();
         } else {
             musicBtn->loadTextureNormal("res/music_on.png");
-            musicBtn->setName("res/music_on.png");
+            UserDefault::getInstance()->setBoolForKey("isMusic", true);
+            UserDefault::getInstance()->flush();
         }
     }
 }

@@ -10,11 +10,11 @@
 using namespace cocos2d::ui;
 USING_NS_CC;
 
-class HelloWorld : public cocos2d::Scene {
+class HelloWorld : public Scene {
 private:
     Sprite *edgeSpace;
     Sprite *ballLink;
-    
+    Sprite *ballArrows;
     PhysicsWorld* m_world;
     float moveDistance;
     
@@ -54,6 +54,7 @@ public:
     void restartGame();
     void showPauseLayer();
     void updateStart(float delta);
+    void resurgenceGame(int ballNum, int blockNum);
     
     bool onTouchBegan(Touch* tTouch,Event* eEvent);//手指按下事件
     void onTouchMoved(Touch* tTouch,Event* eEvent);//手指移动事件

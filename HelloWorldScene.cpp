@@ -7,8 +7,14 @@
 #include "CCSpriteWithHue.hpp"
 #include "SimpleAudioEngine.h"
 
+#define BALL_BOOM_EFFECT_MUSIC "music/ball_Boom01.caf"
+#define BALL_BOOM_EFFECT_MUSIC_TWO "music/ball_Boom02.caf"
+#define BALL_BOOM_EFFECT_MUSIC_THREE "music/ball_Boom03.caf"
+#define BALL_BOOM_EFFECT_MUSIC_FOUR "music/ball_Boom04.caf"
+#define BALL_BOOM_EFFECT_MUSIC_FIVE "music/ball_Boom05.caf"
+#define BALL_BOOM_EFFECT_MUSIC_SIX "music/ball_Boom06.caf"
+#define BALL_BOOM_EFFECT_MUSIC_SEVEN "music/ball_Boom07.caf"
 
-#define BALL_BOOM_EFFECT_MUSIC "music/ball_Boom.caf"
 #define DROPBALL_BOOM_EFFECT_MUSIC "music/dropBall_Boom.caf"
 #define BIRTHBLOCK_BOOM_EFFECT_MUSIC "music/birthBlock_Boom.caf"
 
@@ -30,6 +36,8 @@ static bool isShow;
 static bool isSpeedUp;
 // 当前成绩
 int currentLevelNum;
+// 当前碰撞次数
+int currentCrashNum;
 // 记录下白圈的位置信息
 Vec2 currentBall;
 
@@ -41,6 +49,7 @@ Scene* HelloWorld::createScene()
     isShow = false;
     isSpeedUp = false;
     currentLevelNum = 1;
+    currentCrashNum = 0;
     touchBegin = Vec2(0, 0);
     currentBall = Vec2(0, 0);
     //创建有物理空间的场景
@@ -73,6 +82,8 @@ bool HelloWorld::init()
     UserDefault::getInstance()->setStringForKey("isMusic", "open");
     
     SimpleAudioEngine::getInstance()->preloadEffect(BALL_BOOM_EFFECT_MUSIC);
+    SimpleAudioEngine::getInstance()->preloadEffect(BALL_BOOM_EFFECT_MUSIC_TWO);
+    SimpleAudioEngine::getInstance()->preloadEffect(BALL_BOOM_EFFECT_MUSIC_THREE);
     SimpleAudioEngine::getInstance()->preloadEffect(DROPBALL_BOOM_EFFECT_MUSIC);
     SimpleAudioEngine::getInstance()->preloadEffect(BIRTHBLOCK_BOOM_EFFECT_MUSIC);
     SimpleAudioEngine::getInstance()->setEffectsVolume(1.0f);
@@ -105,11 +116,17 @@ bool HelloWorld::init()
     birthBall();
     
     // 创建球链
-    ballLink = Sprite::create("res/bababa.png");
+    ballLink = Sprite::create("res/bababa3.png");
     this->addChild(ballLink, 2000);
     // 设置锚点
     ballLink->setAnchorPoint(Vec2(0.5, 0.05));
     ballLink->setVisible(false);
+    
+    //    ballArrows = Sprite::create("res/bababa2.png");
+    //    addChild(ballArrows, 2001);
+    //    ballArrows->setScale(0.5, 0.5);
+    //    ballArrows->setAnchorPoint(Vec2(0.5, 0.05));
+    //    ballArrows->setVisible(false);
     
     //创建一个盒子，用来碰撞
     edgeSpace = Sprite::create();
@@ -129,6 +146,17 @@ bool HelloWorld::init()
     listener->onTouchEnded = CC_CALLBACK_2(HelloWorld::onTouchEnded, this);
     // 给整个页面设置监听
     this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener, this);
+    
+    if (UserDefault::getInstance()->getBoolForKey("isResurgence")) {
+        int ballNum = UserDefault::getInstance()->getIntegerForKey("ballNum");
+        resurgenceGame(ballNum / 2, 5);
+        UserDefault::getInstance()->setBoolForKey("isResurgenceed", true);
+        UserDefault::getInstance()->setBoolForKey("isResurgence", false);
+        UserDefault::getInstance()->flush();
+    }
+    
+    headLayer->updateBallVec(ballVec);
+    headLayer->updateSpeedStatus(isSpeedUp, isActivity);
     
     return true;
 }
@@ -341,6 +369,10 @@ void HelloWorld::updateStart(float delta) {
 }
 
 void HelloWorld::update(float dt){
+    if (currentCrashNum > (int)ballVec->size() * 3) {
+        headLayer->showSpeedBtn();
+        currentCrashNum = 0;
+    }
     
     for (int i = 0; i < 3; ++i)
     {
@@ -361,7 +393,7 @@ void HelloWorld::update(float dt){
         }
         
         if (ball->getName() == "yes" && isBegin) {
-            if (ball->getPosition().y < 128 + 32) {
+            if (ball->getPosition().y < 128 + 28) {
                 ball->getPhysicsBody()->setDynamic(false);
                 // 当有球撞到地面且tipsLayer不为空则直接remove掉置NULL
                 if (tipsLayer != NULL) {
@@ -451,6 +483,8 @@ void HelloWorld::update(float dt){
                     string ballString = "";
                     int2str((int)ballVec->size(), ballString);
                     headLayer->changeCurrnetBallLabelText(ballString);
+                    
+                    cout << ballString << endl;
                     
                     // 更新历史最好成绩
                     string oldLevelString = UserDefault::getInstance()->getStringForKey("BestLevel");
@@ -596,11 +630,31 @@ bool HelloWorld::onContactBegin(const PhysicsContact& contact)
         if (tagB != 2000) {
             auto label = (Label *)spriteC->getChildren().at(0);
             int index = atoi(label->getString().c_str());
+            if (UserDefault::getInstance()->getBoolForKey("isMusic")) {
+                // 播放音乐
+                switch (arc4random() % 8) {
+                    case 0:
+                        SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC); break;
+                    case 1:
+                        SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_TWO); break;
+                    case 2:
+                        SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_THREE); break;
+                    case 3:
+                        SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_THREE); break;
+                    case 4:
+                        SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_FOUR); break;
+                    case 5:
+                        SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_FIVE); break;
+                    case 6:
+                        SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_SIX); break;
+                    case 7:
+                        SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_SEVEN); break;
+                }
+            }
             // 保证删除掉的spriteB一点是方格，而不是小球
             if (index == 1 && tagC < 1000) {
                 spriteC->setHue(CC_DEGREES_TO_RADIANS(0));
                 
-                SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC);
                 showParticle(spriteC->getPosition());
                 blockVec->erase(spriteC->getTag());
                 // 如果出现删除格子后问题，把这改回去
@@ -613,26 +667,23 @@ bool HelloWorld::onContactBegin(const PhysicsContact& contact)
             } else {
                 // 增加tagB != 2000解决小球碰撞盒子后打印找不到对应图片的垃圾log
                 if (tagC!= 2000) {
-                    // 播放音乐
-                    //                SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC);
                     std::string nameStr = "";
                     int2str(--index, nameStr);
                     label->setString(nameStr);
                     spriteC->setHue(CC_DEGREES_TO_RADIANS(index * 5));
-                    
                 }
             }
         }
     }
+    currentCrashNum ++;
+    
     return true;
 }
 
 bool HelloWorld::onTouchBegan(Touch* tTouch,Event* eEvent){
     if (this->getBoundingBox().containsPoint(tTouch->getLocation())){
         //判断触摸点是否在目标的范围内
-        
         touchBegin = Vec2(tTouch->getPreviousLocation().x, tTouch->getPreviousLocation().y);
-        
         return true;
     }
     return false;
@@ -640,12 +691,17 @@ bool HelloWorld::onTouchBegan(Touch* tTouch,Event* eEvent){
 
 void HelloWorld::onTouchMoved(Touch* tTouch,Event* eEvent){
     if (!isActivity) {
+        //        ballArrows->setRotation(-180);
         auto ball = ballVec->at(0);
         ballLink->setVisible(true);
+        //        ballArrows->setVisible(true);
         ballLink->setPosition(Vec2(ball->getPosition().x, ball->getPosition().y + 4));
+        //        ballArrows->setPosition(Vec2(ball->getPosition().x, ball->getPosition().y + 4));
         ballLink->setRotation(-tTouch->getPreviousLocation().x * 0.5);
+        //        ballArrows->setRotation(-tTouch->getPreviousLocation().x * 0.5);
         if (ballLink->getRotation() < -268 || ballLink->getRotation() > -92) {
             ballLink->setVisible(false);
+            //            ballArrows->setVisible(false);
             isShow = false;
             return ;
         }
@@ -656,19 +712,20 @@ void HelloWorld::onTouchMoved(Touch* tTouch,Event* eEvent){
         if (sub.y > moveDistance) {
             // 上滑就让球链消失
             ballLink->setVisible(false);
+            //            ballArrows->setVisible(false);
         } else
             //下滑
             if (sub.y < -moveDistance){
                 // 设置最大滑动距离，当超过这个距离后固定放大倍数
-                if (sub.y > -200) {
-                    scale = (int)sub.y % 200 * 0.01;
+                if (sub.y > -80) {
+                    scale = (int)sub.y % 80 * 0.01;
                     // 固定最小放大倍数为本身大小
-                    if (scale > -1) {
-                        scale = -1;
+                    if (scale > -0.4) {
+                        scale = -0.4;
                     }
                     // 固定最大放大倍数为本身三倍
                 } else {
-                    scale = -2;
+                    scale = -0.8;
                 }
             }
         ballLink->setScale(scale, scale);
@@ -678,7 +735,7 @@ void HelloWorld::onTouchMoved(Touch* tTouch,Event* eEvent){
 void HelloWorld::onTouchEnded(Touch* tTouch,Event* eEvent){
     if (!isActivity && ballLink->isVisible()) {
         ballLink->setVisible(false);
-        
+        //        ballArrows->setVisible(false);
         int angle = 0;
         if (-ballLink->getRotation() > 180) {
             angle = (int)(-ballLink->getRotation() - 90);
@@ -695,7 +752,7 @@ void HelloWorld::onTouchEnded(Touch* tTouch,Event* eEvent){
             auto delayTime = DelayTime::create(i * 0.1f);
             auto func = CallFunc::create([this,ball, toX, toY, i]() {
                 ball->getPhysicsBody()->setDynamic(true);
-                ball->getPhysicsBody()->setVelocity(Vect(toX * 4, toY * 4));
+                ball->getPhysicsBody()->setVelocity(Vect(toX * 3.5, toY * 3.5));
             });
             auto seq = Sequence::create(delayTime, func, nullptr);
             this->runAction(seq);
@@ -712,6 +769,7 @@ void HelloWorld::onTouchEnded(Touch* tTouch,Event* eEvent){
     }
 }
 
+// 游戏结束
 void HelloWorld::restartGame() {
     // 更新历史最好成绩
     string oldLevelString = UserDefault::getInstance()->getStringForKey("BestLevel");
@@ -720,10 +778,39 @@ void HelloWorld::restartGame() {
     int2str(currentLevelNum, bestLevelString);
     if (currentLevelNum > oldLevelNum) {
         UserDefault::getInstance()->setStringForKey("BestLevel", bestLevelString);
+        UserDefault::getInstance()->flush();
         headLayer->updateBestLevelLabelText();
     }
-    
+    UserDefault::getInstance()->setIntegerForKey("ballNum", (int)ballVec->size());
+    UserDefault::getInstance()->flush();
+    UserDefault::getInstance()->setIntegerForKey("blockNum", currentLevelNum);
+    UserDefault::getInstance()->flush();
     auto gameScene = GameOverScene::create();
     gameScene->setCurrentLevelNum(bestLevelString);
     Director::getInstance()->replaceScene(TransitionMoveInB::create(0.4, gameScene));
+}
+
+// 游戏复活
+void HelloWorld::resurgenceGame(int ballNum, int blockNum) {
+    for (int i = 1; i < ballNum; i ++) {
+        birthBall();
+    }
+    
+    string ballString = "";
+    int2str((int)ballVec->size(), ballString);
+    headLayer->changeCurrnetBallLabelText(ballString);
+    
+    currentLevelNum = UserDefault::getInstance()->getIntegerForKey("blockNum");
+    for (int j = 1; j < blockNum; j++) {
+        auto delayTime = DelayTime::create(j * 0.5f);
+        auto func = CallFunc::create([this]() {
+            birthBlock();
+            currentLevelNum ++;
+            string levelString = "";
+            int2str(currentLevelNum, levelString);
+            headLayer->changeCurrentLevelLabelText(levelString);
+        });
+        auto seq = Sequence::create(delayTime, func, nullptr);
+        this->runAction(seq);
+    }
 }

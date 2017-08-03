@@ -14,6 +14,8 @@
 static bool isSpeedUp;
 // 当前小球是否处于活跃状态
 static bool isActivity;
+// 加速按钮点击间隔
+int speedInterval;
 
 USING_NS_CC;
 
@@ -30,6 +32,7 @@ bool HeadLayer::init() {
     
     isSpeedUp = false;
     isActivity = false;
+    speedInterval = 0;
     
     Size visible = Director::getInstance()->getWinSize();
     
@@ -56,6 +59,7 @@ bool HeadLayer::init() {
     
     speedBtn = Button::create("res/speed.png");
     addChild(speedBtn);
+    speedBtn->setVisible(false);
     speedBtn->setPosition(Vec2(visible.width - 40, 128 / 2));
     speedBtn->addTouchEventListener(CC_CALLBACK_2(HeadLayer::speedBtnClick, this));
     
@@ -66,7 +70,7 @@ bool HeadLayer::init() {
     addChild(ballLabel);
     
     currentBallLabel = Label::create();
-    currentBallLabel->setString("10");
+    currentBallLabel->setString("1");
     addChild(currentBallLabel);
     currentBallLabel->setPosition(Vec2(ballLabel->getPosition().x, ballLabel->getPosition().y - ballLabel->getContentSize().height * 2));
     currentBallLabel->setSystemFontSize(58);
@@ -78,17 +82,26 @@ bool HeadLayer::init() {
 
 // 加速效果
 void HeadLayer::speedBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {
-    if (type == Widget::TouchEventType::ENDED) {
-        if (!isSpeedUp && isActivity) {
-            for (int i = 0; i < (int)ballVec->size(); i ++) {
-                auto ball = ballVec->at(i);
-                if (ball->getName() == "yes") {
-                    auto vvv = ball->getPhysicsBody()->getVelocity();
-                    ball->getPhysicsBody()->setVelocity(Vec2(vvv.x * 2, vvv.y * 2));
-                }
+    if (!isSpeedUp && isActivity) {
+        int isAllBallOut = 0;
+        for (int i = 0; i < (int)ballVec->size(); i ++) {
+            auto ball = ballVec->at(i);
+            if (ball->getName() == "yes" && ball->getPosition().y > Director::getInstance()->getWinSize().height * 0.2 + 16) {
+                isAllBallOut ++;
+            } else {
+                return;
+            }
+        }
+        
+        if (isAllBallOut == (int)ballVec->size()) {
+            for (int j = 0; j < (int)ballVec->size(); j++) {
+                auto ball = ballVec->at(j);
+                auto vvv = ball->getPhysicsBody()->getVelocity();
+                ball->getPhysicsBody()->setVelocity(Vec2(vvv.x * 2, vvv.y * 2));
             }
             Director::getInstance()->getScheduler()->setTimeScale(2.0f);
             isSpeedUp = true;
+            speedBtn->setVisible(false);
         }
     }
 }
@@ -101,7 +114,7 @@ void HeadLayer::pauseBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type
     }
 }
 
-void HeadLayer::updateBallVec(std::shared_ptr<Vector<Sprite *> > b) {
+void HeadLayer::updateBallVec(std::shared_ptr<Vector<Sprite *>> b) {
     ballVec = b;
 }
 
@@ -115,9 +128,14 @@ void HeadLayer::changeCurrnetBallLabelText(const std::string &text) {
 
 void HeadLayer::updateBestLevelLabelText() {
     bestLevelLabel->setString(UserDefault::getInstance()->getStringForKey("BestLevel"));
+    UserDefault::getInstance()->flush();
 }
 
 void HeadLayer::updateSpeedStatus(bool isS, bool isA) {
     isSpeedUp = isS;
     isActivity = isA;
+}
+
+void HeadLayer::showSpeedBtn() {
+    speedBtn->setVisible(true);
 }

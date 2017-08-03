@@ -62,14 +62,28 @@ bool BeginScene::init() {
     homeBtnClipNode->setPosition((visible.width - visible.width * 0.6) / 2, visible.height * 0.45);
     bgLayer->addChild(homeBtnClipNode);
     
-    auto threeContentLayer = Layer::create();
-    addChild(threeContentLayer);
     
-    auto rankBtn = Button::create("res/rank.png");
-    addChild(rankBtn);
-    rankBtn->setContentSize(cocos2d::Size(visible.height * 0.1 - 20, visible.height * 0.1));
-    rankBtn->setPosition(Vec2((visible.width - visible.width * 0.6) / 2, homeBtnClipNode->getPosition().y - visible.height * 0.15));
-    rankBtn->addTouchEventListener(CC_CALLBACK_2(BeginScene::rankBtnClick, this));
+    auto hintBtnBGLayer = LayerColor::create(Color4B(131, 131, 131, 255), visible.width * 0.6, visible.height * 0.1);
+    auto hintLogo = Sprite::create("res/hint.png");
+    hintBtnBGLayer->addChild(hintLogo);
+    hintLogo->setContentSize(cocos2d::Size(visible.height * 0.1 - 20, visible.height * 0.1 - 20));
+    hintLogo->setPosition(Vec2(hintLogo->getContentSize().width / 2 + 10, (hintBtnBGLayer->getContentSize().height - 20) / 2 + 10));
+    
+    auto hintBtn = Button::create();
+    hintBtn->setTitleText("提示 HINT");
+    hintBtn->setTitleFontSize(50);
+    hintBtnBGLayer->addChild(hintBtn);
+    hintBtn->setPosition(Vec2(hintLogo->getContentSize().width * 2 + hintLogo->getPosition().x, hintBtnBGLayer->getContentSize().height / 2));
+    hintBtn->addTouchEventListener(CC_CALLBACK_2(BeginScene::beginBtnClick, this));
+    
+    auto hintBtnClipNode = createRoundedRectMaskNode(cocos2d::Size(visible.width * 0.6, visible.height * 0.1), 60, 1.0f, 50);
+    hintBtnClipNode->addChild(hintBtnBGLayer);
+    hintBtnClipNode->setPosition((visible.width - visible.width * 0.6) / 2, visible.height * 0.3);
+    bgLayer->addChild(hintBtnClipNode);
+    
+    
+    
+    //    rankBtn->addTouchEventListener(CC_CALLBACK_2(BeginScene::rankBtnClick, this));
     
     return true;
 }
@@ -79,12 +93,20 @@ void BeginScene::rankBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type
     [[UIApplication sharedApplication].keyWindow.rootViewController presentViewController:vc animated:YES completion:^{
         
     }];
-    
 }
 
 void BeginScene::beginBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {
-    // 从右向左切换场景到游戏主场景中
     if (type == Widget::TouchEventType::ENDED) {
+        UserDefault::getInstance()->setBoolForKey("isResurgence", false);
+        UserDefault::getInstance()->flush();
+        UserDefault::getInstance()->setBoolForKey("isResurgenceed", false);
+        UserDefault::getInstance()->flush();
+        
+        if (UserDefault::getInstance()->getBoolForKey("isMusic", true)) {
+            UserDefault::getInstance()->setBoolForKey("isMusic", true);
+            UserDefault::getInstance()->flush();
+        }
+        
         Director::getInstance()->replaceScene(TransitionSlideInB::create(0.4, HelloWorld::createScene()));
     }
 }

@@ -40,6 +40,7 @@ public:
     void updateBallVec(std::shared_ptr<Vector<Sprite*>> b);
     void updateBestLevelLabelText();
     void updateSpeedStatus(bool isS, bool isA);
+    void showSpeedBtn();
     
     void speedBtnClick(Ref *pSender, Widget::TouchEventType type);
     
