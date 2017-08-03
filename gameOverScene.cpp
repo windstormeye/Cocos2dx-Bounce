@@ -94,15 +94,23 @@ bool GameOverScene::init() {
     resurgenceBtn->setScale(0.8);
     resurgenceBtn->addTouchEventListener(CC_CALLBACK_2(GameOverScene::resurgenceBtnClick, this));
     
-    auto rankBtn = Button::create("res/rank.png");
-    addChild(rankBtn);
-    rankBtn->setScale(0.7);
-    rankBtn->setPosition(Vec2(visible.width / 2 - 200, resurgenceBtn->getPosition().y));
-    
     auto infoBtn = Button::create("res/info.png");
     addChild(infoBtn);
     infoBtn->setScale(0.7);
     infoBtn->setPosition(Vec2(visible.width / 2 + 200, resurgenceBtn->getPosition().y));
+    
+    auto tipsLabel = Label::create();
+    addChild(tipsLabel);
+    tipsLabel->setString("注意：复活后球数减半，难度+5");
+    tipsLabel->setSystemFontSize(20);
+    tipsLabel->setColor(Color3B(78, 78, 78));
+    tipsLabel->setPosition(Vec2(visible.width / 2, 38));
+    
+    if (UserDefault::getInstance()->getBoolForKey("isResurgenceed", false)) {
+        resurgenceBtn->setVisible(false);
+        resurgenceSprite->setVisible(false);
+        infoBtn->setPosition(Vec2(visible.width / 2, infoBtn->getPosition().y));
+    }
     
     return true;
 }

@@ -15,7 +15,7 @@ static bool isSpeedUp;
 // 当前小球是否处于活跃状态
 static bool isActivity;
 // 加速按钮点击间隔
-int speedInterval;
+int oldTime;
 
 USING_NS_CC;
 
@@ -32,7 +32,7 @@ bool HeadLayer::init() {
     
     isSpeedUp = false;
     isActivity = false;
-    speedInterval = 0;
+    oldTime = 0;
     
     Size visible = Director::getInstance()->getWinSize();
     
@@ -57,9 +57,9 @@ bool HeadLayer::init() {
     currentLevelLabel->setPosition(Vec2(visible.width / 2, bestLevelLabel->getPosition().y + 10));
     addChild(currentLevelLabel);
     
-    speedBtn = Button::create("res/speed.png");
+    speedBtn = Button::create("res/speed_no.png");
     addChild(speedBtn);
-    speedBtn->setVisible(false);
+    speedBtn->setName("res/speed_no.png");
     speedBtn->setPosition(Vec2(visible.width - 40, 128 / 2));
     speedBtn->addTouchEventListener(CC_CALLBACK_2(HeadLayer::speedBtnClick, this));
     
@@ -82,26 +82,17 @@ bool HeadLayer::init() {
 
 // 加速效果
 void HeadLayer::speedBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {
-    if (!isSpeedUp && isActivity) {
-        int isAllBallOut = 0;
-        for (int i = 0; i < (int)ballVec->size(); i ++) {
-            auto ball = ballVec->at(i);
-            if (ball->getName() == "yes" && ball->getPosition().y > Director::getInstance()->getWinSize().height * 0.2 + 16) {
-                isAllBallOut ++;
-            } else {
-                return;
-            }
-        }
-        
-        if (isAllBallOut == (int)ballVec->size()) {
+    if (type == Widget::TouchEventType::ENDED) {
+        if (isActivity && speedBtn->getName() == "res/speed.png") {
             for (int j = 0; j < (int)ballVec->size(); j++) {
                 auto ball = ballVec->at(j);
                 auto vvv = ball->getPhysicsBody()->getVelocity();
                 ball->getPhysicsBody()->setVelocity(Vec2(vvv.x * 2, vvv.y * 2));
             }
-            Director::getInstance()->getScheduler()->setTimeScale(2.0f);
+            Director::getInstance()->getScheduler()->setTimeScale(2.0);
+            speedBtn->loadTextureNormal("res/speed_no.png");
+            speedBtn->setName("res/speed_no.png");
             isSpeedUp = true;
-            speedBtn->setVisible(false);
         }
     }
 }
@@ -109,7 +100,8 @@ void HeadLayer::speedBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type
 void HeadLayer::pauseBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {
     if (type == Widget::TouchEventType::ENDED) {
         // 以淡出的方式出现暂停场景
-        Director::getInstance()->pushScene(TransitionCrossFade::create(0.4, PauseScene::createScene()));
+        //        Director::getInstance()->pushScene(TransitionCrossFade::create(0.4, PauseScene::createScene()));
+        Director::getInstance()->pushScene(PauseScene::createScene());
         //        Director::getInstance()->pushScene(TransitionCrossFade::create(0.4, GameOverScene::createScene()));
     }
 }
@@ -136,6 +128,14 @@ void HeadLayer::updateSpeedStatus(bool isS, bool isA) {
     isActivity = isA;
 }
 
-void HeadLayer::showSpeedBtn() {
-    speedBtn->setVisible(true);
+void HeadLayer::showSpeedBtn(bool isShow) {
+    if (isShow) {
+        //        speedBtn->setVisible(true);
+        speedBtn->loadTextureNormal("res/speed.png");
+        speedBtn->setName("res/speed.png");
+    } else {
+        //        speedBtn->setVisible(false);
+        speedBtn->loadTextureNormal("res/speed_no.png");
+        speedBtn->setName("res/speed_no.png");
+    }
 }

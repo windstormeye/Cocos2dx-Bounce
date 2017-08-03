@@ -20,7 +20,8 @@ USING_NS_CC;
 class BeginScene:public Scene {
 private:
     void beginBtnClick(Ref *pSender, Widget::TouchEventType type);
-    void rankBtnClick(Ref *pSender, Widget::TouchEventType type);
+    void hintBtnClick(Ref *pSender, Widget::TouchEventType type);
+    
 public:
     static cocos2d::Scene* createScene();
     virtual bool init();

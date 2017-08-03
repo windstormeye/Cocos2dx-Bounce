@@ -8,7 +8,6 @@
 
 #include "BeginScene.h"
 #include "HelloWorldScene.h"
-#include "PJRankViewController.h"
 
 Scene* BeginScene::createScene()
 {
@@ -74,25 +73,20 @@ bool BeginScene::init() {
     hintBtn->setTitleFontSize(50);
     hintBtnBGLayer->addChild(hintBtn);
     hintBtn->setPosition(Vec2(hintLogo->getContentSize().width * 2 + hintLogo->getPosition().x, hintBtnBGLayer->getContentSize().height / 2));
-    hintBtn->addTouchEventListener(CC_CALLBACK_2(BeginScene::beginBtnClick, this));
+    hintBtn->addTouchEventListener(CC_CALLBACK_2(BeginScene::hintBtnClick, this));
     
     auto hintBtnClipNode = createRoundedRectMaskNode(cocos2d::Size(visible.width * 0.6, visible.height * 0.1), 60, 1.0f, 50);
     hintBtnClipNode->addChild(hintBtnBGLayer);
     hintBtnClipNode->setPosition((visible.width - visible.width * 0.6) / 2, visible.height * 0.3);
     bgLayer->addChild(hintBtnClipNode);
     
-    
-    
-    //    rankBtn->addTouchEventListener(CC_CALLBACK_2(BeginScene::rankBtnClick, this));
-    
     return true;
 }
 
-void BeginScene::rankBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {
-    PJRankViewController *vc = [PJRankViewController new];
-    [[UIApplication sharedApplication].keyWindow.rootViewController presentViewController:vc animated:YES completion:^{
-        
-    }];
+void BeginScene::hintBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {
+    if (type == Widget::TouchEventType::ENDED) {
+        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://www.baidu.com"]];
+    }
 }
 
 void BeginScene::beginBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {

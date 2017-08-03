@@ -17,7 +17,7 @@ private:
     Sprite *ballArrows;
     PhysicsWorld* m_world;
     float moveDistance;
-    
+    EventListenerPhysicsContact *contactListener;
     HeadLayer *headLayer;
     TipsLayer *tipsLayer;
     
@@ -48,6 +48,7 @@ public:
     virtual bool init();
     CREATE_FUNC(HelloWorld);
     virtual void onEnter();
+    virtual void onExit();
     virtual void update(float dt);
     bool onContactBegin(const PhysicsContact& contact);
     

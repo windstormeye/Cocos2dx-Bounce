@@ -16,7 +16,7 @@
 #define BALL_BOOM_EFFECT_MUSIC_SEVEN "music/ball_Boom07.caf"
 
 #define DROPBALL_BOOM_EFFECT_MUSIC "music/dropBall_Boom.caf"
-#define BIRTHBLOCK_BOOM_EFFECT_MUSIC "music/birthBlock_Boom.caf"
+#define BIRTHBLOCK_BOOM_EFFECT_MUSIC "music/circle_Boom.caf"
 
 using namespace std;
 using namespace CocosDenshion;
@@ -38,6 +38,8 @@ static bool isSpeedUp;
 int currentLevelNum;
 // 当前碰撞次数
 int currentCrashNum;
+// 记录当前是否已经出现过加速按钮
+static bool isShowSpeed;
 // 记录下白圈的位置信息
 Vec2 currentBall;
 
@@ -48,14 +50,13 @@ Scene* HelloWorld::createScene()
     isActivity = false;
     isShow = false;
     isSpeedUp = false;
+    isShowSpeed = false;
     currentLevelNum = 1;
     currentCrashNum = 0;
     touchBegin = Vec2(0, 0);
     currentBall = Vec2(0, 0);
     //创建有物理空间的场景
     Scene* scene=Scene::createWithPhysics();
-    //    scene->getPhysicsWorld()->setAutoStep(false);
-    //    scene->getPhysicsWorld()->setFixedUpdateRate(180);
     //设置Debug模式
     //  x  scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
     HelloWorld* layer=HelloWorld::create();
@@ -79,12 +80,13 @@ bool HelloWorld::init()
         return false;
     }
     
-    UserDefault::getInstance()->setStringForKey("isMusic", "open");
-    
     SimpleAudioEngine::getInstance()->preloadEffect(BALL_BOOM_EFFECT_MUSIC);
     SimpleAudioEngine::getInstance()->preloadEffect(BALL_BOOM_EFFECT_MUSIC_TWO);
     SimpleAudioEngine::getInstance()->preloadEffect(BALL_BOOM_EFFECT_MUSIC_THREE);
-    SimpleAudioEngine::getInstance()->preloadEffect(DROPBALL_BOOM_EFFECT_MUSIC);
+    SimpleAudioEngine::getInstance()->preloadEffect(BALL_BOOM_EFFECT_MUSIC_FOUR);
+    SimpleAudioEngine::getInstance()->preloadEffect(BALL_BOOM_EFFECT_MUSIC_FIVE);
+    SimpleAudioEngine::getInstance()->preloadEffect(BALL_BOOM_EFFECT_MUSIC_SIX);
+    SimpleAudioEngine::getInstance()->preloadEffect(BALL_BOOM_EFFECT_MUSIC_SEVEN);
     SimpleAudioEngine::getInstance()->preloadEffect(BIRTHBLOCK_BOOM_EFFECT_MUSIC);
     SimpleAudioEngine::getInstance()->setEffectsVolume(1.0f);
     
@@ -146,6 +148,7 @@ bool HelloWorld::init()
     listener->onTouchEnded = CC_CALLBACK_2(HelloWorld::onTouchEnded, this);
     // 给整个页面设置监听
     this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener, this);
+    //    this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(nullptr, this);
     
     if (UserDefault::getInstance()->getBoolForKey("isResurgence")) {
         int ballNum = UserDefault::getInstance()->getIntegerForKey("ballNum");
@@ -351,14 +354,19 @@ void HelloWorld::onEnter()
 {
     Scene::onEnter();
     //添加监听器
-    auto contactListener=EventListenerPhysicsContact::create();
+    contactListener=EventListenerPhysicsContact::create();
     //设置监听器的碰撞开始函数
     contactListener->onContactBegin = CC_CALLBACK_1(HelloWorld::onContactBegin, this);
     //添加到事件分发器中
     _eventDispatcher->addEventListenerWithSceneGraphPriority(contactListener, this);
+    _eventDispatcher->resumeEventListenersForTarget(this);
     
     scheduleOnce(CC_SCHEDULE_SELECTOR(HelloWorld::updateStart), 1);
-    
+}
+
+void HelloWorld::onExit() {
+    Scene::onExit();
+    _eventDispatcher->removeEventListener(contactListener);
 }
 
 void HelloWorld::updateStart(float delta) {
@@ -369,8 +377,9 @@ void HelloWorld::updateStart(float delta) {
 }
 
 void HelloWorld::update(float dt){
-    if (currentCrashNum > (int)ballVec->size() * 3) {
-        headLayer->showSpeedBtn();
+    if (currentCrashNum > (int)ballVec->size() * 10 && !isShowSpeed) {
+        headLayer->showSpeedBtn(true);
+        isShowSpeed = true;
         currentCrashNum = 0;
     }
     
@@ -471,11 +480,9 @@ void HelloWorld::update(float dt){
                         }
                     }
                     
-                    //                    SimpleAudioEngine::getInstance()->playEffect(BIRTHBLOCK_BOOM_EFFECT_MUSIC);
-                    
                     birthBlock();
-                    
                     currentLevelNum ++;
+                    
                     string levelString = "";
                     int2str(currentLevelNum, levelString);
                     headLayer->changeCurrentLevelLabelText(levelString);
@@ -483,8 +490,6 @@ void HelloWorld::update(float dt){
                     string ballString = "";
                     int2str((int)ballVec->size(), ballString);
                     headLayer->changeCurrnetBallLabelText(ballString);
-                    
-                    cout << ballString << endl;
                     
                     // 更新历史最好成绩
                     string oldLevelString = UserDefault::getInstance()->getStringForKey("BestLevel");
@@ -499,9 +504,12 @@ void HelloWorld::update(float dt){
                     isActivity = false;
                     isBegin = false;
                     isSpeedUp = false;
+                    isShowSpeed = false;
+                    currentCrashNum = 0;
                     
                     headLayer->updateBallVec(ballVec);
                     headLayer->updateSpeedStatus(isSpeedUp, isActivity);
+                    headLayer->showSpeedBtn(false);
                     
                     Director::getInstance()->getScheduler()->setTimeScale(1.0f);
                     dropTempballVec->clear();
@@ -575,7 +583,11 @@ bool HelloWorld::onContactBegin(const PhysicsContact& contact)
     
     // 判断小球撞上的是不是白圈，spriteA和spriteB都要进行判断
     if (spriteA->getTag() == 1000 && spriteB->getName() == "res/circle1.png") {
-        //        SimpleAudioEngine::getInstance()->playEffect(DROPBALL_BOOM_EFFECT_MUSIC);
+        
+        if (UserDefault::getInstance()->getBoolForKey("isMusic")) {
+            SimpleAudioEngine::getInstance()->playEffect(BIRTHBLOCK_BOOM_EFFECT_MUSIC);
+        }
+        
         currentBall = spriteB->getPosition();
         blockVec->erase(spriteB->getTag());
         for (int i = 0; i < blockVec->size(); i++) {
@@ -596,7 +608,10 @@ bool HelloWorld::onContactBegin(const PhysicsContact& contact)
     }
     
     if (spriteB->getTag() == 1000 && spriteA->getName() == "res/circle1.png") {
-        //        SimpleAudioEngine::getInstance()->playEffect(DROPBALL_BOOM_EFFECT_MUSIC);
+        if (UserDefault::getInstance()->getBoolForKey("isMusic")) {
+            SimpleAudioEngine::getInstance()->playEffect(BIRTHBLOCK_BOOM_EFFECT_MUSIC);
+        }
+        
         currentBall = spriteA->getPosition();
         blockVec->erase(spriteA->getTag());
         for (int i = 0; i < blockVec->size(); i++) {
@@ -621,6 +636,10 @@ bool HelloWorld::onContactBegin(const PhysicsContact& contact)
         return false;
     }
     
+    if (tagB == 2000) {
+        currentCrashNum ++;
+    }
+    
     if(tagA == 1000) {
         spriteA->setName("yes");
         isBegin = true;
@@ -630,27 +649,6 @@ bool HelloWorld::onContactBegin(const PhysicsContact& contact)
         if (tagB != 2000) {
             auto label = (Label *)spriteC->getChildren().at(0);
             int index = atoi(label->getString().c_str());
-            if (UserDefault::getInstance()->getBoolForKey("isMusic")) {
-                // 播放音乐
-                switch (arc4random() % 8) {
-                    case 0:
-                        SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC); break;
-                    case 1:
-                        SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_TWO); break;
-                    case 2:
-                        SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_THREE); break;
-                    case 3:
-                        SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_THREE); break;
-                    case 4:
-                        SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_FOUR); break;
-                    case 5:
-                        SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_FIVE); break;
-                    case 6:
-                        SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_SIX); break;
-                    case 7:
-                        SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_SEVEN); break;
-                }
-            }
             // 保证删除掉的spriteB一点是方格，而不是小球
             if (index == 1 && tagC < 1000) {
                 spriteC->setHue(CC_DEGREES_TO_RADIANS(0));
@@ -664,9 +662,57 @@ bool HelloWorld::onContactBegin(const PhysicsContact& contact)
                     auto block = blockVec->at(i);
                     block->setTag((int)blockVec->getIndex(block));
                 }
+                
+                if (UserDefault::getInstance()->getBoolForKey("isMusic")) {
+                    // 播放音乐
+                    switch (arc4random() % 8) {
+                        case 0:
+                            SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC); break;
+                        case 1:
+                            SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_TWO); break;
+                        case 2:
+                            SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_THREE); break;
+                        case 3:
+                            SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_THREE); break;
+                        case 4:
+                            SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_FOUR); break;
+                        case 5:
+                            SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_FIVE); break;
+                        case 6:
+                            SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_SIX); break;
+                        case 7:
+                            SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_SEVEN); break;
+                    }
+                }
+                
             } else {
                 // 增加tagB != 2000解决小球碰撞盒子后打印找不到对应图片的垃圾log
                 if (tagC!= 2000) {
+                    
+                    if (UserDefault::getInstance()->getBoolForKey("isMusic")) {
+                        // 播放音乐
+                        switch (arc4random() % 8) {
+                            case 0:
+                                SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC); break;
+                            case 1:
+                                SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_TWO); break;
+                            case 2:
+                                SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_THREE); break;
+                            case 3:
+                                SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_THREE); break;
+                            case 4:
+                                SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_FOUR); break;
+                            case 5:
+                                SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_FIVE); break;
+                            case 6:
+                                SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_SIX); break;
+                            case 7:
+                                SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_SEVEN); break;
+                        }
+                    }
+                    
+                    currentCrashNum ++;
+                    
                     std::string nameStr = "";
                     int2str(--index, nameStr);
                     label->setString(nameStr);
@@ -675,8 +721,6 @@ bool HelloWorld::onContactBegin(const PhysicsContact& contact)
             }
         }
     }
-    currentCrashNum ++;
-    
     return true;
 }
 
