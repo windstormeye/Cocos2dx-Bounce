@@ -7,16 +7,9 @@
 #include "CCSpriteWithHue.hpp"
 #include "SimpleAudioEngine.h"
 
-#define BALL_BOOM_EFFECT_MUSIC "music/ball_Boom01.caf"
-#define BALL_BOOM_EFFECT_MUSIC_TWO "music/ball_Boom02.caf"
-#define BALL_BOOM_EFFECT_MUSIC_THREE "music/ball_Boom03.caf"
-#define BALL_BOOM_EFFECT_MUSIC_FOUR "music/ball_Boom04.caf"
-#define BALL_BOOM_EFFECT_MUSIC_FIVE "music/ball_Boom05.caf"
-#define BALL_BOOM_EFFECT_MUSIC_SIX "music/ball_Boom06.caf"
-#define BALL_BOOM_EFFECT_MUSIC_SEVEN "music/ball_Boom07.caf"
-
-#define DROPBALL_BOOM_EFFECT_MUSIC "music/dropBall_Boom.caf"
-#define BIRTHBLOCK_BOOM_EFFECT_MUSIC "music/circle_Boom.caf"
+#define BALL_BOOM_EFFECT_MUSIC "music/ball_Boom.caf"
+#define DROPBALL_BOOM_EFFECT_MUSIC "music/circle_Boom.caf"
+#define BIRTHBLOCK_BOOM_EFFECT_MUSIC "music/birthBlock_Boom.caf"
 
 using namespace std;
 using namespace CocosDenshion;
@@ -81,13 +74,8 @@ bool HelloWorld::init()
     }
     
     SimpleAudioEngine::getInstance()->preloadEffect(BALL_BOOM_EFFECT_MUSIC);
-    SimpleAudioEngine::getInstance()->preloadEffect(BALL_BOOM_EFFECT_MUSIC_TWO);
-    SimpleAudioEngine::getInstance()->preloadEffect(BALL_BOOM_EFFECT_MUSIC_THREE);
-    SimpleAudioEngine::getInstance()->preloadEffect(BALL_BOOM_EFFECT_MUSIC_FOUR);
-    SimpleAudioEngine::getInstance()->preloadEffect(BALL_BOOM_EFFECT_MUSIC_FIVE);
-    SimpleAudioEngine::getInstance()->preloadEffect(BALL_BOOM_EFFECT_MUSIC_SIX);
-    SimpleAudioEngine::getInstance()->preloadEffect(BALL_BOOM_EFFECT_MUSIC_SEVEN);
     SimpleAudioEngine::getInstance()->preloadEffect(BIRTHBLOCK_BOOM_EFFECT_MUSIC);
+    SimpleAudioEngine::getInstance()->preloadEffect(DROPBALL_BOOM_EFFECT_MUSIC);
     SimpleAudioEngine::getInstance()->setEffectsVolume(1.0f);
     
     Size visibleSize=Director::getInstance()->getWinSize();
@@ -124,12 +112,6 @@ bool HelloWorld::init()
     ballLink->setAnchorPoint(Vec2(0.5, 0.05));
     ballLink->setVisible(false);
     
-    //    ballArrows = Sprite::create("res/bababa2.png");
-    //    addChild(ballArrows, 2001);
-    //    ballArrows->setScale(0.5, 0.5);
-    //    ballArrows->setAnchorPoint(Vec2(0.5, 0.05));
-    //    ballArrows->setVisible(false);
-    
     //创建一个盒子，用来碰撞
     edgeSpace = Sprite::create();
     edgeSpace->setContentSize(Size(visibleSize.width, visibleSize.height - 128));
@@ -148,11 +130,10 @@ bool HelloWorld::init()
     listener->onTouchEnded = CC_CALLBACK_2(HelloWorld::onTouchEnded, this);
     // 给整个页面设置监听
     this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener, this);
-    //    this->getEventDispatcher()->addEventListenerWithSceneGraphPriority(nullptr, this);
     
     if (UserDefault::getInstance()->getBoolForKey("isResurgence")) {
         int ballNum = UserDefault::getInstance()->getIntegerForKey("ballNum");
-        resurgenceGame(ballNum / 2, 5);
+        resurgenceGame(ballNum, 5);
         UserDefault::getInstance()->setBoolForKey("isResurgenceed", true);
         UserDefault::getInstance()->setBoolForKey("isResurgence", false);
         UserDefault::getInstance()->flush();
@@ -213,7 +194,7 @@ void HelloWorld::dropBall(Vec2 vec) {
     ball->setTag(1000);
     this->addChild(ball);
     // 先不给小球设置物理身体
-    ActionInterval *forward = MoveTo::create(0.4, Vec2(vec.x, 128 + 16));
+    ActionInterval *forward = MoveTo::create(0.2, Vec2(vec.x, 128 + 16));
     ball->runAction(forward);
 }
 
@@ -312,10 +293,10 @@ void HelloWorld::birthBlock() {
                 string numStr = "";
                 if (isHigh) {
                     int2str(currentLevelNum * 2, numStr);
-                    block->setHue(CC_DEGREES_TO_RADIANS(currentLevelNum * 2 * 5));
+                    block->setHue(CC_DEGREES_TO_RADIANS(currentLevelNum * 2 * 3));
                 } else {
                     int2str(currentLevelNum, numStr);
-                    block->setHue(CC_DEGREES_TO_RADIANS(currentLevelNum * 5));
+                    block->setHue(CC_DEGREES_TO_RADIANS(currentLevelNum * 3));
                 }
                 blockLabel->setString(numStr);
                 blockLabel->setColor(Color3B(0, 0, 0));
@@ -377,7 +358,7 @@ void HelloWorld::updateStart(float delta) {
 }
 
 void HelloWorld::update(float dt){
-    if (currentCrashNum > (int)ballVec->size() * 10 && !isShowSpeed) {
+    if (currentCrashNum > (int)ballVec->size() * 15 && !isShowSpeed) {
         headLayer->showSpeedBtn(true);
         isShowSpeed = true;
         currentCrashNum = 0;
@@ -397,7 +378,6 @@ void HelloWorld::update(float dt){
             Vec2 oldV = ball->getPhysicsBody()->getVelocity();
             ball->getPhysicsBody()->setDynamic(false);
             ball->setPosition(Vec2(ball->getPosition().x - 8, ball->getPosition().y));
-            //            ball->getPhysicsBody()->setDynamic(true);
             continue;
         }
         
@@ -482,6 +462,10 @@ void HelloWorld::update(float dt){
                     
                     birthBlock();
                     currentLevelNum ++;
+                    if (UserDefault::getInstance()->getBoolForKey("isMusic")) {
+                        SimpleAudioEngine::getInstance()->playEffect(BIRTHBLOCK_BOOM_EFFECT_MUSIC);
+                    }
+                    
                     
                     string levelString = "";
                     int2str(currentLevelNum, levelString);
@@ -585,7 +569,7 @@ bool HelloWorld::onContactBegin(const PhysicsContact& contact)
     if (spriteA->getTag() == 1000 && spriteB->getName() == "res/circle1.png") {
         
         if (UserDefault::getInstance()->getBoolForKey("isMusic")) {
-            SimpleAudioEngine::getInstance()->playEffect(BIRTHBLOCK_BOOM_EFFECT_MUSIC);
+            SimpleAudioEngine::getInstance()->playEffect(DROPBALL_BOOM_EFFECT_MUSIC);
         }
         
         currentBall = spriteB->getPosition();
@@ -609,7 +593,7 @@ bool HelloWorld::onContactBegin(const PhysicsContact& contact)
     
     if (spriteB->getTag() == 1000 && spriteA->getName() == "res/circle1.png") {
         if (UserDefault::getInstance()->getBoolForKey("isMusic")) {
-            SimpleAudioEngine::getInstance()->playEffect(BIRTHBLOCK_BOOM_EFFECT_MUSIC);
+            SimpleAudioEngine::getInstance()->playEffect(DROPBALL_BOOM_EFFECT_MUSIC);
         }
         
         currentBall = spriteA->getPosition();
@@ -665,24 +649,7 @@ bool HelloWorld::onContactBegin(const PhysicsContact& contact)
                 
                 if (UserDefault::getInstance()->getBoolForKey("isMusic")) {
                     // 播放音乐
-                    switch (arc4random() % 8) {
-                        case 0:
-                            SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC); break;
-                        case 1:
-                            SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_TWO); break;
-                        case 2:
-                            SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_THREE); break;
-                        case 3:
-                            SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_THREE); break;
-                        case 4:
-                            SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_FOUR); break;
-                        case 5:
-                            SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_FIVE); break;
-                        case 6:
-                            SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_SIX); break;
-                        case 7:
-                            SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_SEVEN); break;
-                    }
+                    SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC);
                 }
                 
             } else {
@@ -691,24 +658,7 @@ bool HelloWorld::onContactBegin(const PhysicsContact& contact)
                     
                     if (UserDefault::getInstance()->getBoolForKey("isMusic")) {
                         // 播放音乐
-                        switch (arc4random() % 8) {
-                            case 0:
-                                SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC); break;
-                            case 1:
-                                SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_TWO); break;
-                            case 2:
-                                SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_THREE); break;
-                            case 3:
-                                SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_THREE); break;
-                            case 4:
-                                SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_FOUR); break;
-                            case 5:
-                                SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_FIVE); break;
-                            case 6:
-                                SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_SIX); break;
-                            case 7:
-                                SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC_SEVEN); break;
-                        }
+                        SimpleAudioEngine::getInstance()->playEffect(BALL_BOOM_EFFECT_MUSIC);
                     }
                     
                     currentCrashNum ++;
@@ -716,7 +666,7 @@ bool HelloWorld::onContactBegin(const PhysicsContact& contact)
                     std::string nameStr = "";
                     int2str(--index, nameStr);
                     label->setString(nameStr);
-                    spriteC->setHue(CC_DEGREES_TO_RADIANS(index * 5));
+                    spriteC->setHue(CC_DEGREES_TO_RADIANS(index * 3));
                 }
             }
         }
@@ -815,6 +765,8 @@ void HelloWorld::onTouchEnded(Touch* tTouch,Event* eEvent){
 
 // 游戏结束
 void HelloWorld::restartGame() {
+    SimpleAudioEngine::getInstance()->stopAllEffects();
+    
     // 更新历史最好成绩
     string oldLevelString = UserDefault::getInstance()->getStringForKey("BestLevel");
     int oldLevelNum = atoi(oldLevelString.c_str());

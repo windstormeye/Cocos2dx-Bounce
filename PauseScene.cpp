@@ -40,53 +40,49 @@ bool PauseScene::init() {
     contentLayerClipNode->setPosition(visible.width * 0.05f / 2, visible.height * 0.3f / 2);
     this->addChild(contentLayerClipNode);
     
-    auto layerTitle = Label::create();
-    layerTitle->setString("暂停 PAUSE");
+    auto layerTitle = Label::createWithTTF("暂停 PAUSE", "fonts/chinese.ttf", 45);;
     layerTitle->setTextColor(Color4B(255, 255, 255, 255));
-    layerTitle->setSystemFontSize(45);
     layerTitle->setPosition(Vec2(visible.width / 2, contentLayer->getContentSize().height - visible.height * 0.1 / 2));
     contentLayer->addChild(layerTitle);
     
-    auto backBtnBGLayer = LayerColor::create(Color4B(235, 69, 57, 255), visible.width * 0.6, visible.height * 0.1);
+    auto continueSprite = Sprite::create("res/redBG.png");
+    contentLayer->addChild(continueSprite);
+    continueSprite->setContentSize(Size(visible.width * 0.6, visible.height * 0.1));
+    continueSprite->setPosition(visible.width / 2, layerTitle->getPosition().y - layerTitle->getContentSize().height - visible.height * 0.1);
+    
     auto backBtn = Button::create();
     backBtn->setTitleText("继续 CONTINUE");
     backBtn->setTitleFontSize(40);
-    backBtnBGLayer->addChild(backBtn);
-    backBtn->setPosition(Vec2(backBtnBGLayer->getContentSize().width / 2, backBtnBGLayer->getContentSize().height / 2));
+    continueSprite->addChild(backBtn);
+    backBtn->setPosition(Vec2(continueSprite->getContentSize().width / 2, continueSprite->getContentSize().height / 2));
     backBtn->addTouchEventListener(CC_CALLBACK_2(PauseScene::backBtnClick, this));
     
-    auto backBtnClipNode = createRoundedRectMaskNode(Size(visible.width * 0.6, visible.height * 0.1), 60, 1.0f, 50);
-    backBtnClipNode->addChild(backBtnBGLayer);
-    backBtnClipNode->setPosition((visible.width - visible.width * 0.6) / 2, layerTitle->getPosition().y - layerTitle->getContentSize().height - visible.height * 0.15);
-    contentLayer->addChild(backBtnClipNode);
+    auto restartSprite = Sprite::create("res/whiteBG.png");
+    contentLayer->addChild(restartSprite);
+    restartSprite->setContentSize(Size(visible.width * 0.6, visible.height * 0.1));
+    restartSprite->setPosition(visible.width / 2, continueSprite->getPosition().y - visible.height * 0.15);
     
-    auto restartBtnBGLayer = LayerColor::create(Color4B(255, 255, 255, 255), visible.width * 0.6, visible.height * 0.1);
     auto restartBtn = Button::create();
     restartBtn->setTitleText("重新开始 RESTART");
     restartBtn->setTitleFontSize(40);
     restartBtn->setTitleColor(Color3B(84, 84, 84));
-    restartBtnBGLayer->addChild(restartBtn);
-    restartBtn->setPosition(Vec2(restartBtnBGLayer->getContentSize().width / 2, restartBtnBGLayer->getContentSize().height / 2));
+    restartSprite->addChild(restartBtn);
+    restartBtn->setPosition(Vec2(restartSprite->getContentSize().width / 2, restartSprite->getContentSize().height / 2));
     restartBtn->addTouchEventListener(CC_CALLBACK_2(PauseScene::restartBtnClick, this));
     
-    auto restartBtnClipNode = createRoundedRectMaskNode(Size(visible.width * 0.6, visible.height * 0.1), 60, 1.0f, 50);
-    restartBtnClipNode->addChild(restartBtnBGLayer);
-    restartBtnClipNode->setPosition((visible.width - visible.width * 0.6) / 2, backBtnClipNode->getPosition().y - visible.height * 0.15);
-    contentLayer->addChild(restartBtnClipNode);
+    auto homeSprite = Sprite::create("res/grayBG.png");
+    contentLayer->addChild(homeSprite);
+    homeSprite->setPosition(visible.width / 2, restartSprite->getPosition().y - visible.height * 0.15);
+    homeSprite->setContentSize(Size(visible.width * 0.6, visible.height * 0.1));
     
-    auto homeBtnBGLayer = LayerColor::create(Color4B(131, 131, 131, 255), visible.width * 0.6, visible.height * 0.1);
     auto homeBtn = Button::create();
     homeBtn->setTitleText("主菜单 MAIN MENU");
     homeBtn->setTitleFontSize(40);
     homeBtn->setTitleColor(Color3B(255, 255, 255));
-    homeBtnBGLayer->addChild(homeBtn);
-    homeBtn->setPosition(Vec2(homeBtnBGLayer->getContentSize().width / 2, homeBtnBGLayer->getContentSize().height / 2));
+    homeSprite->addChild(homeBtn);
+    homeBtn->setPosition(Vec2(homeSprite->getContentSize().width / 2, homeSprite->getContentSize().height / 2));
     homeBtn->addTouchEventListener(CC_CALLBACK_2(PauseScene::homeBtnClick, this));
     
-    auto homeBtnClipNode = createRoundedRectMaskNode(Size(visible.width * 0.6, visible.height * 0.1), 60, 1.0f, 50);
-    homeBtnClipNode->addChild(homeBtnBGLayer);
-    homeBtnClipNode->setPosition((visible.width - visible.width * 0.6) / 2, restartBtnClipNode->getPosition().y - visible.height * 0.15);
-    contentLayer->addChild(homeBtnClipNode);
     
     musicBtn = Button::create("res/music_on.png");
     contentLayer->addChild(musicBtn);
@@ -118,18 +114,33 @@ void PauseScene::musicBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType typ
 
 void PauseScene::backBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {
     if (type == Widget::TouchEventType::ENDED) {
+        
+        if (UserDefault::getInstance()->getBoolForKey("isMusic")) {
+            SimpleAudioEngine::getInstance()->playEffect("music/BtnClick.caf");
+        }
+        
         Director::getInstance()->popScene();
     }
 }
 
 void PauseScene::restartBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {
     if (type == Widget::TouchEventType::ENDED) {
+        
+        if (UserDefault::getInstance()->getBoolForKey("isMusic")) {
+            SimpleAudioEngine::getInstance()->playEffect("music/BtnClick.caf");
+        }
+        
         Director::getInstance()->replaceScene(TransitionCrossFade::create(0.4, HelloWorld::createScene()));
     }
 }
 
 void PauseScene::homeBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {
     if (type == Widget::TouchEventType::ENDED) {
+        
+        if (UserDefault::getInstance()->getBoolForKey("isMusic")) {
+            SimpleAudioEngine::getInstance()->playEffect("music/BtnClick.caf");
+        }
+        
         Director::getInstance()->replaceScene(TransitionMoveInT::create(0.4, BeginScene::createScene()));
     }
 }

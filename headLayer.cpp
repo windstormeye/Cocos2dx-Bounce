@@ -9,6 +9,7 @@
 #include "headLayer.hpp"
 #include "PauseScene.hpp"
 #include "gameOverScene.hpp"
+#include "SimpleAudioEngine.h"
 
 // 记录是否加过速
 static bool isSpeedUp;
@@ -18,6 +19,8 @@ static bool isActivity;
 int oldTime;
 
 USING_NS_CC;
+using namespace CocosDenshion;
+
 
 Layer* HeadLayer::createLayer()
 {
@@ -45,15 +48,15 @@ bool HeadLayer::init() {
     pauseBtn->addTouchEventListener(CC_CALLBACK_2(HeadLayer::pauseBtnClick, this));
     this->addChild(pauseBtn);
     
-    levelLabel = Label::createWithTTF("BEST", "fonts/arial.ttf", 22);
+    levelLabel = Label::createWithTTF("BEST", "fonts/chinese.ttf", 22);
     levelLabel->setPosition(Vec2(pauseBtn->getPosition().x + pauseBtn->getContentSize().width * 1.5, 98));
     addChild(levelLabel);
     
-    bestLevelLabel = Label::createWithTTF("0", "fonts/arial.ttf", 58);
-    bestLevelLabel->setPosition(Vec2(levelLabel->getPosition().x, 113 - bestLevelLabel->getContentSize().height));
+    bestLevelLabel = Label::createWithTTF("0", "fonts/chinese.ttf", 58);
+    bestLevelLabel->setPosition(Vec2(levelLabel->getPosition().x, levelLabel->getPosition().y - levelLabel->getContentSize().height * 1.5));
     addChild(bestLevelLabel);
     
-    currentLevelLabel = Label::createWithTTF("0", "fonts/arial.ttf", 78);
+    currentLevelLabel = Label::createWithTTF("0", "fonts/chinese.ttf", 78);
     currentLevelLabel->setPosition(Vec2(visible.width / 2, bestLevelLabel->getPosition().y + 10));
     addChild(currentLevelLabel);
     
@@ -63,16 +66,14 @@ bool HeadLayer::init() {
     speedBtn->setPosition(Vec2(visible.width - 40, 128 / 2));
     speedBtn->addTouchEventListener(CC_CALLBACK_2(HeadLayer::speedBtnClick, this));
     
-    auto ballLabel = Label::create();
-    ballLabel->setString("BALLS");
-    ballLabel->setSystemFontSize(22);
+    auto ballLabel = Label::createWithTTF("BALLS", "fonts/chinese.ttf", 22);
     ballLabel->setPosition(Vec2(visible.width * 0.8, 98));
     addChild(ballLabel);
     
     currentBallLabel = Label::create();
     currentBallLabel->setString("1");
     addChild(currentBallLabel);
-    currentBallLabel->setPosition(Vec2(ballLabel->getPosition().x, ballLabel->getPosition().y - ballLabel->getContentSize().height * 2));
+    currentBallLabel->setPosition(Vec2(ballLabel->getPosition().x, ballLabel->getPosition().y - ballLabel->getContentSize().height * 1.5));
     currentBallLabel->setSystemFontSize(58);
     
     updateBestLevelLabelText();
@@ -99,10 +100,13 @@ void HeadLayer::speedBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type
 
 void HeadLayer::pauseBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {
     if (type == Widget::TouchEventType::ENDED) {
+        
+        if (UserDefault::getInstance()->getBoolForKey("isMusic")) {
+            SimpleAudioEngine::getInstance()->playEffect("music/BtnClick.caf");
+        }
+        
         // 以淡出的方式出现暂停场景
-        //        Director::getInstance()->pushScene(TransitionCrossFade::create(0.4, PauseScene::createScene()));
         Director::getInstance()->pushScene(PauseScene::createScene());
-        //        Director::getInstance()->pushScene(TransitionCrossFade::create(0.4, GameOverScene::createScene()));
     }
 }
 

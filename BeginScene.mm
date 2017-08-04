@@ -8,6 +8,9 @@
 
 #include "BeginScene.h"
 #include "HelloWorldScene.h"
+#include "SimpleAudioEngine.h"
+
+using namespace CocosDenshion;
 
 Scene* BeginScene::createScene()
 {
@@ -43,54 +46,59 @@ bool BeginScene::init() {
     ActionInterval * rotateto = RotateBy::create(0.5, -300);
     logoRotationSprite->runAction(RepeatForever::create(Sequence::create(rotateto,NULL)));
     
-    auto beginBtnBGLayer = LayerColor::create(Color4B(235, 69, 57, 255), visible.width * 0.6, visible.height * 0.1);
+    auto beginSprite = Sprite::create("res/redBG.png");
+    addChild(beginSprite);
+    beginSprite->setContentSize(cocos2d::Size(visible.width * 0.6, visible.height * 0.1));
+    beginSprite->setPosition(Vec2(visible.width / 2, visible.height / 2));
+    
     auto beginLogo = Sprite::create("res/begin_game.png");
-    beginBtnBGLayer->addChild(beginLogo);
+    beginSprite->addChild(beginLogo);
     beginLogo->setContentSize(cocos2d::Size(visible.height * 0.1 - 20, visible.height * 0.1 - 20));
-    beginLogo->setPosition(Vec2(beginLogo->getContentSize().width / 2 + 10, (beginBtnBGLayer->getContentSize().height - 20) / 2 + 10));
+    beginLogo->setPosition(Vec2(beginLogo->getContentSize().width / 2 + 10, (beginSprite->getContentSize().height - 20) / 2 + 10));
     
     auto beginBtn = Button::create();
     beginBtn->setTitleText("开始 PLAY");
     beginBtn->setTitleFontSize(50);
-    beginBtnBGLayer->addChild(beginBtn);
-    beginBtn->setPosition(Vec2(beginLogo->getContentSize().width * 2 + beginLogo->getPosition().x, beginBtnBGLayer->getContentSize().height / 2));
+    beginSprite->addChild(beginBtn);
+    beginBtn->setPosition(Vec2(beginLogo->getContentSize().width * 2 + beginLogo->getPosition().x, beginLogo->getContentSize().height / 1.7));
     beginBtn->addTouchEventListener(CC_CALLBACK_2(BeginScene::beginBtnClick, this));
     
-    auto homeBtnClipNode = createRoundedRectMaskNode(cocos2d::Size(visible.width * 0.6, visible.height * 0.1), 60, 1.0f, 50);
-    homeBtnClipNode->addChild(beginBtnBGLayer);
-    homeBtnClipNode->setPosition((visible.width - visible.width * 0.6) / 2, visible.height * 0.45);
-    bgLayer->addChild(homeBtnClipNode);
+    auto hintSprite = Sprite::create("res/grayBG.png");
+    addChild(hintSprite);
+    hintSprite->setPosition(Vec2(visible.width / 2, visible.height * 0.35));
+    hintSprite->setContentSize(cocos2d::Size(visible.width * 0.6, visible.height * 0.1));
     
-    
-    auto hintBtnBGLayer = LayerColor::create(Color4B(131, 131, 131, 255), visible.width * 0.6, visible.height * 0.1);
     auto hintLogo = Sprite::create("res/hint.png");
-    hintBtnBGLayer->addChild(hintLogo);
+    hintSprite->addChild(hintLogo);
     hintLogo->setContentSize(cocos2d::Size(visible.height * 0.1 - 20, visible.height * 0.1 - 20));
-    hintLogo->setPosition(Vec2(hintLogo->getContentSize().width / 2 + 10, (hintBtnBGLayer->getContentSize().height - 20) / 2 + 10));
+    hintLogo->setPosition(Vec2(hintLogo->getContentSize().width / 2 + 10, (hintSprite->getContentSize().height - 20) / 2 + 10));
     
     auto hintBtn = Button::create();
     hintBtn->setTitleText("提示 HINT");
     hintBtn->setTitleFontSize(50);
-    hintBtnBGLayer->addChild(hintBtn);
-    hintBtn->setPosition(Vec2(hintLogo->getContentSize().width * 2 + hintLogo->getPosition().x, hintBtnBGLayer->getContentSize().height / 2));
+    hintSprite->addChild(hintBtn);
+    hintBtn->setPosition(Vec2(beginLogo->getContentSize().width * 2 + beginLogo->getPosition().x, beginLogo->getContentSize().height / 1.7));
     hintBtn->addTouchEventListener(CC_CALLBACK_2(BeginScene::hintBtnClick, this));
-    
-    auto hintBtnClipNode = createRoundedRectMaskNode(cocos2d::Size(visible.width * 0.6, visible.height * 0.1), 60, 1.0f, 50);
-    hintBtnClipNode->addChild(hintBtnBGLayer);
-    hintBtnClipNode->setPosition((visible.width - visible.width * 0.6) / 2, visible.height * 0.3);
-    bgLayer->addChild(hintBtnClipNode);
     
     return true;
 }
 
 void BeginScene::hintBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {
     if (type == Widget::TouchEventType::ENDED) {
+        if (UserDefault::getInstance()->getBoolForKey("isMusic")) {
+            SimpleAudioEngine::getInstance()->playEffect("music/BtnClick.caf");
+        }
         [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://www.baidu.com"]];
     }
 }
 
 void BeginScene::beginBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {
     if (type == Widget::TouchEventType::ENDED) {
+        
+        if (UserDefault::getInstance()->getBoolForKey("isMusic")) {
+            SimpleAudioEngine::getInstance()->playEffect("music/BtnClick.caf");
+        }
+        
         UserDefault::getInstance()->setBoolForKey("isResurgence", false);
         UserDefault::getInstance()->flush();
         UserDefault::getInstance()->setBoolForKey("isResurgenceed", false);
@@ -103,63 +111,4 @@ void BeginScene::beginBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType typ
         
         Director::getInstance()->replaceScene(TransitionSlideInB::create(0.4, HelloWorld::createScene()));
     }
-}
-
-void BeginScene::appendCubicBezier(int startPoint, std::vector<Vec2>& verts, const Vec2& from, const Vec2& control1, const Vec2& control2, const Vec2& to, uint32_t segments)
-{
-    float t = 0;
-    for(int i = 0; i < segments; i++)
-    {
-        float x = powf(1 - t, 3) * from.x + 3.0f * powf(1 - t, 2) * t * control1.x + 3.0f * (1 - t) * t * t * control2.x + t * t * t * to.x;
-        float y = powf(1 - t, 3) * from.y + 3.0f * powf(1 - t, 2) * t * control1.y + 3.0f * (1 - t) * t * t * control2.y + t * t * t * to.y;
-        verts[startPoint + i] = Vec2(x,y);
-        t += 1.0f / segments;
-    }
-}
-
-Node* BeginScene::createRoundedRectMaskNode(cocos2d::Size size, float radius, float borderWidth, int cornerSegments)
-{
-    const float kappa = 0.552228474;
-    float oneMinusKappa = (1.0f-kappa);
-    
-    // define corner control points
-    std::vector<Vec2> verts(16);
-    
-    verts[0] = Vec2(0, radius);
-    verts[1] = Vec2(0, radius * oneMinusKappa);
-    verts[2] = Vec2(radius * oneMinusKappa, 0);
-    verts[3] = Vec2(radius, 0);
-    
-    verts[4] = Vec2(size.width - radius, 0);
-    verts[5] = Vec2(size.width - radius * oneMinusKappa, 0);
-    verts[6] = Vec2(size.width, radius * oneMinusKappa);
-    verts[7] = Vec2(size.width, radius);
-    
-    verts[8] = Vec2(size.width, size.height - radius);
-    verts[9] = Vec2(size.width, size.height - radius * oneMinusKappa);
-    verts[10] = Vec2(size.width - radius * oneMinusKappa, size.height);
-    verts[11] = Vec2(size.width - radius, size.height);
-    
-    verts[12] = Vec2(radius, size.height);
-    verts[13] = Vec2(radius * oneMinusKappa, size.height);
-    verts[14] = Vec2(0, size.height - radius * oneMinusKappa);
-    verts[15] = Vec2(0, size.height - radius);
-    
-    // result
-    std::vector<Vec2> polyVerts(4 * cornerSegments + 1);
-    
-    // add corner arc segments
-    appendCubicBezier(0 * cornerSegments, polyVerts, verts[0], verts[1], verts[2], verts[3], cornerSegments);
-    appendCubicBezier(1 * cornerSegments, polyVerts, verts[4], verts[5], verts[6], verts[7], cornerSegments);
-    appendCubicBezier(2 * cornerSegments, polyVerts, verts[8], verts[9], verts[10], verts[11], cornerSegments);
-    appendCubicBezier(3 * cornerSegments, polyVerts, verts[12], verts[13], verts[14], verts[15], cornerSegments);
-    // close path
-    polyVerts[4 * cornerSegments] = verts[0];
-    
-    // draw final poly into mask
-    auto shapeMask = DrawNode::create();
-    shapeMask->drawPolygon(&polyVerts[0], (int)polyVerts.size(), Color4F::WHITE, 0.0f, Color4F::WHITE);
-    
-    // create clip node with draw node as stencil (mask)
-    return ClippingNode::create(shapeMask);
 }
