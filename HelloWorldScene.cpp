@@ -377,7 +377,7 @@ void HelloWorld::update(float dt){
         if (ball->getPosition().x < 0 || ball->getPosition().x > visibleSize.width || ball->getPosition().y > visibleSize.height) {
             Vec2 oldV = ball->getPhysicsBody()->getVelocity();
             ball->getPhysicsBody()->setDynamic(false);
-            ball->setPosition(Vec2(ball->getPosition().x - 8, ball->getPosition().y));
+            ball->setPosition(Vec2(ball->getPosition().x - 8, 128 + 16));
             continue;
         }
         
@@ -444,7 +444,7 @@ void HelloWorld::update(float dt){
                             ActionInterval *forward = MoveTo::create(0.15, Vec2(tempBall->getPosition().x, tempBall->getPosition().y));
                             greenball->runAction(forward);
                             
-                            auto delayTime = DelayTime::create(j * 0.15f);
+                            auto delayTime = DelayTime::create(j * 0.2f);
                             auto func = CallFunc::create([this, greenball, j]()
                                                          {
                                                              Texture2D* texture = Director::getInstance()->getTextureCache()->addImage("res/ball.png");
@@ -496,8 +496,6 @@ void HelloWorld::update(float dt){
                     headLayer->showSpeedBtn(false);
                     
                     Director::getInstance()->getScheduler()->setTimeScale(1.0f);
-                    dropTempballVec->clear();
-                    tempballVec->clear();
                 }
             }
         }
@@ -685,17 +683,15 @@ bool HelloWorld::onTouchBegan(Touch* tTouch,Event* eEvent){
 
 void HelloWorld::onTouchMoved(Touch* tTouch,Event* eEvent){
     if (!isActivity) {
-        //        ballArrows->setRotation(-180);
+        dropTempballVec->clear();
+        tempballVec->clear();
+        
         auto ball = ballVec->at(0);
         ballLink->setVisible(true);
-        //        ballArrows->setVisible(true);
         ballLink->setPosition(Vec2(ball->getPosition().x, ball->getPosition().y + 4));
-        //        ballArrows->setPosition(Vec2(ball->getPosition().x, ball->getPosition().y + 4));
         ballLink->setRotation(-tTouch->getPreviousLocation().x * 0.5);
-        //        ballArrows->setRotation(-tTouch->getPreviousLocation().x * 0.5);
         if (ballLink->getRotation() < -268 || ballLink->getRotation() > -92) {
             ballLink->setVisible(false);
-            //            ballArrows->setVisible(false);
             isShow = false;
             return ;
         }
@@ -706,7 +702,6 @@ void HelloWorld::onTouchMoved(Touch* tTouch,Event* eEvent){
         if (sub.y > moveDistance) {
             // 上滑就让球链消失
             ballLink->setVisible(false);
-            //            ballArrows->setVisible(false);
         } else
             //下滑
             if (sub.y < -moveDistance){
@@ -729,7 +724,6 @@ void HelloWorld::onTouchMoved(Touch* tTouch,Event* eEvent){
 void HelloWorld::onTouchEnded(Touch* tTouch,Event* eEvent){
     if (!isActivity && ballLink->isVisible()) {
         ballLink->setVisible(false);
-        //        ballArrows->setVisible(false);
         int angle = 0;
         if (-ballLink->getRotation() > 180) {
             angle = (int)(-ballLink->getRotation() - 90);
@@ -743,7 +737,7 @@ void HelloWorld::onTouchEnded(Touch* tTouch,Event* eEvent){
         for (int i = 0; i < (int)ballVec->size() ; i ++) {
             auto ball = ballVec->at(i);
             // 给小球的发射时间根据i值变化
-            auto delayTime = DelayTime::create(i * 0.1f);
+            auto delayTime = DelayTime::create(i * 0.13f);
             auto func = CallFunc::create([this,ball, toX, toY, i]() {
                 ball->getPhysicsBody()->setDynamic(true);
                 ball->getPhysicsBody()->setVelocity(Vect(toX * 3.5, toY * 3.5));

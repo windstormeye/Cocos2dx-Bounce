@@ -9,6 +9,7 @@
 #include "BeginScene.h"
 #include "HelloWorldScene.h"
 #include "SimpleAudioEngine.h"
+#include "infoViewController.h"
 
 using namespace CocosDenshion;
 
@@ -74,7 +75,7 @@ bool BeginScene::init() {
     hintLogo->setPosition(Vec2(hintLogo->getContentSize().width / 2 + 10, (hintSprite->getContentSize().height - 20) / 2 + 10));
     
     auto hintBtn = Button::create();
-    hintBtn->setTitleText("提示 HINT");
+    hintBtn->setTitleText("提示 INFO");
     hintBtn->setTitleFontSize(50);
     hintSprite->addChild(hintBtn);
     hintBtn->setPosition(Vec2(beginLogo->getContentSize().width * 2 + beginLogo->getPosition().x, beginLogo->getContentSize().height / 1.7));
@@ -88,7 +89,10 @@ void BeginScene::hintBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type
         if (UserDefault::getInstance()->getBoolForKey("isMusic")) {
             SimpleAudioEngine::getInstance()->playEffect("music/BtnClick.caf");
         }
-        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://www.baidu.com"]];
+        infoViewController *vc = [infoViewController new];
+        [[[UIApplication sharedApplication] delegate].window.rootViewController presentViewController:vc animated:YES completion:^{
+            
+        }];
     }
 }
 

@@ -88,7 +88,11 @@ void HeadLayer::speedBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type
             for (int j = 0; j < (int)ballVec->size(); j++) {
                 auto ball = ballVec->at(j);
                 auto vvv = ball->getPhysicsBody()->getVelocity();
-                ball->getPhysicsBody()->setVelocity(Vec2(vvv.x * 2, vvv.y * 2));
+                if (vvv.y < 70 && ball->getName() != "no") {
+                    ball->getPhysicsBody()->setVelocity(Vec2(vvv.x * 2, vvv.y * 2 + 100));
+                } else {
+                    ball->getPhysicsBody()->setVelocity(Vec2(vvv.x * 2, vvv.y * 2));
+                }
             }
             Director::getInstance()->getScheduler()->setTimeScale(2.0);
             speedBtn->loadTextureNormal("res/speed_no.png");

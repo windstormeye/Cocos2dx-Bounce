@@ -118,7 +118,6 @@ void PauseScene::backBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type
         if (UserDefault::getInstance()->getBoolForKey("isMusic")) {
             SimpleAudioEngine::getInstance()->playEffect("music/BtnClick.caf");
         }
-        
         Director::getInstance()->popScene();
     }
 }
@@ -129,7 +128,7 @@ void PauseScene::restartBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType t
         if (UserDefault::getInstance()->getBoolForKey("isMusic")) {
             SimpleAudioEngine::getInstance()->playEffect("music/BtnClick.caf");
         }
-        
+        UserDefault::getInstance()->setBoolForKey("isResurgenceed", false);
         Director::getInstance()->replaceScene(TransitionCrossFade::create(0.4, HelloWorld::createScene()));
     }
 }
@@ -140,7 +139,7 @@ void PauseScene::homeBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type
         if (UserDefault::getInstance()->getBoolForKey("isMusic")) {
             SimpleAudioEngine::getInstance()->playEffect("music/BtnClick.caf");
         }
-        
+        UserDefault::getInstance()->setBoolForKey("isResurgenceed", false);
         Director::getInstance()->replaceScene(TransitionMoveInT::create(0.4, BeginScene::createScene()));
     }
 }

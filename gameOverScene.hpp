@@ -30,6 +30,7 @@ public:
     void backBtnClick(Ref *pSender, Widget::TouchEventType type);
     void resurgenceBtnClick(Ref *pSender, Widget::TouchEventType type);
     void setCurrentLevelNum(const std::string &text);
+    void infoBtnClick(Ref *pSender, Widget::TouchEventType type);
     
 };
 

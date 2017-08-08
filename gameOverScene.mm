@@ -10,6 +10,7 @@
 #include "HelloWorldScene.h"
 #include "BeginScene.h"
 #include "SimpleAudioEngine.h"
+#include "infoViewController.h"
 
 #define GAMEOVER_MUSIC "music/gameOver.caf"
 
@@ -25,7 +26,7 @@ bool GameOverScene::init() {
         return false;
     }
     
-    Size visible = Director::getInstance()->getWinSize();
+    cocos2d::Size visible = Director::getInstance()->getWinSize();
     
     auto bgLayer = LayerColor::create(Color4B(30, 30, 30, 255), visible.width, visible.height);
     addChild(bgLayer);
@@ -102,6 +103,7 @@ bool GameOverScene::init() {
     addChild(infoBtn);
     infoBtn->setScale(0.6);
     infoBtn->setPosition(Vec2(visible.width / 2 + 200, resurgenceBtn->getPosition().y));
+    infoBtn->addTouchEventListener(CC_CALLBACK_2(GameOverScene::infoBtnClick, this));
     
     auto tipsLabel = Label::create();
     addChild(tipsLabel);
@@ -115,6 +117,7 @@ bool GameOverScene::init() {
         resurgenceSprite->setVisible(false);
         infoBtn->setPosition(Vec2(visible.width / 2, infoBtn->getPosition().y));
         UserDefault::getInstance()->setBoolForKey("isResurgenceed", false);
+        tipsLabel->setVisible(false);
     }
     
     // 给粒子效果设置定时器
@@ -127,6 +130,15 @@ bool GameOverScene::init() {
     this->runAction(seq);
     
     return true;
+}
+
+void GameOverScene::infoBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {
+    if (type == Widget::TouchEventType::ENDED) {
+        infoViewController *vc = [infoViewController new];
+        [[[UIApplication sharedApplication] delegate].window.rootViewController presentViewController:vc animated:YES completion:^{
+         
+         }];
+    }
 }
 
 void GameOverScene::resurgenceBtnClick(cocos2d::Ref *pSender, Widget::TouchEventType type) {
